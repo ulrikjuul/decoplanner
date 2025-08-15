@@ -1,0 +1,23 @@
+algorithm,depth,time,bottom_gas,deco_gas,conservatism,expected_runtime,expected_deco_time,status,accuracy,notes
+Buhlmann,51,25,21/35,50@21,GF40/85,177.3,147.3,validated,99.6%,Perfect alignment achieved - 177.3 vs 178.0 DecoPlanner
+Buhlmann,100,25,8/85,"18@21,99@6",GF40/85,178.0,148.2,reference,100%,Reference case from DecoPlanner output
+VPM-B,40,20,21/35,50@21,VPM+0,42.0,19.2,ready,TBD,From 40m20min_21-35_EAN50_VPM0.txt
+VPM-B,40,20,21/35,50@21,VPM+1,44.0,21.2,ready,TBD,From 40m20min_21-35_EAN50_VPM1.txt
+VPM-B,40,20,21/35,50@21,VPM+2,45.0,22.2,ready,TBD,From 40m20min_21-35_EAN50_VPM2.txt
+VPM-B,40,20,21/35,50@21,VPM+3,47.0,24.6,ready,TBD,From 40m20min_21-35_EAN50_VPM3.txt
+VPM-B,40,20,21/35,50@21,VPM+4,49.0,26.6,ready,TBD,From 40m20min_21-35_EAN50_VPM4.txt
+VPM-B,45,25,21/35,50@21,VPM+0,59.0,31.3,ready,TBD,From 45m25min_21-35_EAN50_VPM0.txt
+VPM-B,45,25,21/35,50@21,VPM+1,62.0,34.3,ready,TBD,From 45m25min_21-35_EAN50_VPM1.txt
+VPM-B,45,25,21/35,50@21,VPM+2,64.0,36.7,ready,TBD,From 45m25min_21-35_EAN50_VPM2.txt
+VPM-B,45,25,21/35,50@21,VPM+3,68.0,40.7,ready,TBD,From 45m25min_21-35_EAN50_VPM3.txt
+VPM-B,45,25,21/35,50@21,VPM+4,70.0,42.7,ready,TBD,From 45m25min_21-35_EAN50_VPM4.txt
+VPM-B,51,25,21/35,50@21,VPM+0,67.0,39.3,captured,100%,From 51m25min_21-35_EAN50_VPM0.txt
+VPM-B,51,25,21/35,50@21,VPM+1,72.0,44.3,captured,100%,From 51m25min_21-35_EAN50_VPM1.txt
+VPM-B,51,25,21/35,50@21,VPM+2,73.0,45.3,captured,100%,From 51m25min_21-35_EAN50_VPM2.txt
+VPM-B,51,25,21/35,50@21,VPM+3,76.0,48.3,captured,100%,From 51m25min_21-35_EAN50_VPM3.txt
+VPM-B,51,25,21/35,50@21,VPM+4,80.0,52.7,captured,100%,From 51m25min_21-35_EAN50_VPM4.txt
+VPM-B,60,20,18/45,50@21,VPM+0,69.0,46.0,ready,TBD,From 60m20min_18-45_EAN50_VPM0.txt
+VPM-B,60,20,18/45,50@21,VPM+1,72.0,49.3,ready,TBD,From 60m20min_18-45_EAN50_VPM1.txt
+VPM-B,60,20,18/45,50@21,VPM+2,75.0,52.3,ready,TBD,From 60m20min_18-45_EAN50_VPM2.txt
+VPM-B,60,20,18/45,50@21,VPM+3,77.0,54.3,ready,TBD,From 60m20min_18-45_EAN50_VPM3.txt
+VPM-B,60,20,18/45,50@21,VPM+4,82.0,59.3,ready,TBD,From 60m20min_18-45_EAN50_VPM4.txt

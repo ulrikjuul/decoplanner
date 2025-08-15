@@ -1,0 +1,1002 @@
+[
+  {
+    "depth": 40,
+    "time": 20,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 0,
+    "expected_runtime": 42.0,
+    "expected_deco_time": 19.2,
+    "schedule": [
+      {
+        "depth": 40,
+        "time": 20.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 2.0
+      },
+      {
+        "depth": 9,
+        "time": 3.0
+      },
+      {
+        "depth": 6,
+        "time": 4.0
+      },
+      {
+        "depth": 3,
+        "time": 9.0
+      }
+    ],
+    "filename": "40m20min_21-35_EAN50_VPM0.txt"
+  },
+  {
+    "depth": 40,
+    "time": 20,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 1,
+    "expected_runtime": 44.0,
+    "expected_deco_time": 21.2,
+    "schedule": [
+      {
+        "depth": 40,
+        "time": 20.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 1.0
+      },
+      {
+        "depth": 9,
+        "time": 3.0
+      },
+      {
+        "depth": 6,
+        "time": 5.0
+      },
+      {
+        "depth": 3,
+        "time": 10.0
+      }
+    ],
+    "filename": "40m20min_21-35_EAN50_VPM1.txt"
+  },
+  {
+    "depth": 40,
+    "time": 20,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 2,
+    "expected_runtime": 45.0,
+    "expected_deco_time": 22.2,
+    "schedule": [
+      {
+        "depth": 40,
+        "time": 20.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 2.0
+      },
+      {
+        "depth": 9,
+        "time": 3.0
+      },
+      {
+        "depth": 6,
+        "time": 5.0
+      },
+      {
+        "depth": 3,
+        "time": 10.0
+      }
+    ],
+    "filename": "40m20min_21-35_EAN50_VPM2.txt"
+  },
+  {
+    "depth": 40,
+    "time": 20,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 3,
+    "expected_runtime": 47.0,
+    "expected_deco_time": 24.6,
+    "schedule": [
+      {
+        "depth": 40,
+        "time": 20.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 1.0
+      },
+      {
+        "depth": 12,
+        "time": 2.0
+      },
+      {
+        "depth": 9,
+        "time": 3.0
+      },
+      {
+        "depth": 6,
+        "time": 6.0
+      },
+      {
+        "depth": 3,
+        "time": 11.0
+      }
+    ],
+    "filename": "40m20min_21-35_EAN50_VPM3.txt"
+  },
+  {
+    "depth": 40,
+    "time": 20,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 4,
+    "expected_runtime": 49.0,
+    "expected_deco_time": 26.6,
+    "schedule": [
+      {
+        "depth": 40,
+        "time": 20.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 1.0
+      },
+      {
+        "depth": 12,
+        "time": 2.0
+      },
+      {
+        "depth": 9,
+        "time": 3.0
+      },
+      {
+        "depth": 6,
+        "time": 6.0
+      },
+      {
+        "depth": 3,
+        "time": 13.0
+      }
+    ],
+    "filename": "40m20min_21-35_EAN50_VPM4.txt"
+  },
+  {
+    "depth": 45,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 0,
+    "expected_runtime": 59.0,
+    "expected_deco_time": 31.3,
+    "schedule": [
+      {
+        "depth": 45,
+        "time": 25.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 4.0
+      },
+      {
+        "depth": 6,
+        "time": 7.0
+      },
+      {
+        "depth": 3,
+        "time": 13.0
+      }
+    ],
+    "filename": "45m25min_21-35_EAN50_VPM0.txt"
+  },
+  {
+    "depth": 45,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 1,
+    "expected_runtime": 62.0,
+    "expected_deco_time": 34.3,
+    "schedule": [
+      {
+        "depth": 45,
+        "time": 25.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 5.0
+      },
+      {
+        "depth": 6,
+        "time": 7.0
+      },
+      {
+        "depth": 3,
+        "time": 15.0
+      }
+    ],
+    "filename": "45m25min_21-35_EAN50_VPM1.txt"
+  },
+  {
+    "depth": 45,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 2,
+    "expected_runtime": 64.0,
+    "expected_deco_time": 36.7,
+    "schedule": [
+      {
+        "depth": 45,
+        "time": 25.0
+      },
+      {
+        "depth": 24,
+        "time": 1.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 5.0
+      },
+      {
+        "depth": 6,
+        "time": 8.0
+      },
+      {
+        "depth": 3,
+        "time": 15.0
+      }
+    ],
+    "filename": "45m25min_21-35_EAN50_VPM2.txt"
+  },
+  {
+    "depth": 45,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 3,
+    "expected_runtime": 68.0,
+    "expected_deco_time": 40.7,
+    "schedule": [
+      {
+        "depth": 45,
+        "time": 25.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 1.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 5.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 17.0
+      }
+    ],
+    "filename": "45m25min_21-35_EAN50_VPM3.txt"
+  },
+  {
+    "depth": 45,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 4,
+    "expected_runtime": 70.0,
+    "expected_deco_time": 42.7,
+    "schedule": [
+      {
+        "depth": 45,
+        "time": 25.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 6.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 18.0
+      }
+    ],
+    "filename": "45m25min_21-35_EAN50_VPM4.txt"
+  },
+  {
+    "depth": 51,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 0,
+    "expected_runtime": 67.0,
+    "expected_deco_time": 39.3,
+    "schedule": [
+      {
+        "depth": 51,
+        "time": 25.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 1.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 5.0
+      },
+      {
+        "depth": 6,
+        "time": 8.0
+      },
+      {
+        "depth": 3,
+        "time": 15.0
+      }
+    ],
+    "filename": "51m25min_21-35_EAN50_VPM0.txt"
+  },
+  {
+    "depth": 51,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 1,
+    "expected_runtime": 72.0,
+    "expected_deco_time": 44.3,
+    "schedule": [
+      {
+        "depth": 51,
+        "time": 25.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 5.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 18.0
+      }
+    ],
+    "filename": "51m25min_21-35_EAN50_VPM1.txt"
+  },
+  {
+    "depth": 51,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 2,
+    "expected_runtime": 73.0,
+    "expected_deco_time": 45.3,
+    "schedule": [
+      {
+        "depth": 51,
+        "time": 25.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 1.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 6.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 18.0
+      }
+    ],
+    "filename": "51m25min_21-35_EAN50_VPM2.txt"
+  },
+  {
+    "depth": 51,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 3,
+    "expected_runtime": 76.0,
+    "expected_deco_time": 48.3,
+    "schedule": [
+      {
+        "depth": 51,
+        "time": 25.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 4.0
+      },
+      {
+        "depth": 9,
+        "time": 6.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 20.0
+      }
+    ],
+    "filename": "51m25min_21-35_EAN50_VPM3.txt"
+  },
+  {
+    "depth": 51,
+    "time": 25,
+    "bottom_gas": "21/35",
+    "deco_gas": "50@21",
+    "conservatism": 4,
+    "expected_runtime": 80.0,
+    "expected_deco_time": 52.7,
+    "schedule": [
+      {
+        "depth": 51,
+        "time": 25.0
+      },
+      {
+        "depth": 30,
+        "time": 1.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 4.0
+      },
+      {
+        "depth": 9,
+        "time": 6.0
+      },
+      {
+        "depth": 6,
+        "time": 11.0
+      },
+      {
+        "depth": 3,
+        "time": 21.0
+      }
+    ],
+    "filename": "51m25min_21-35_EAN50_VPM4.txt"
+  },
+  {
+    "depth": 60,
+    "time": 20,
+    "bottom_gas": "18/45",
+    "deco_gas": "50@21",
+    "conservatism": 0,
+    "expected_runtime": 69.0,
+    "expected_deco_time": 46.0,
+    "schedule": [
+      {
+        "depth": 60,
+        "time": 20.0
+      },
+      {
+        "depth": 33,
+        "time": 1.0
+      },
+      {
+        "depth": 30,
+        "time": 1.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 3.0
+      },
+      {
+        "depth": 21,
+        "time": 1.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 5.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 16.0
+      }
+    ],
+    "filename": "60m20min_18-45_EAN50_VPM0.txt"
+  },
+  {
+    "depth": 60,
+    "time": 20,
+    "bottom_gas": "18/45",
+    "deco_gas": "50@21",
+    "conservatism": 1,
+    "expected_runtime": 72.0,
+    "expected_deco_time": 49.3,
+    "schedule": [
+      {
+        "depth": 60,
+        "time": 20.0
+      },
+      {
+        "depth": 36,
+        "time": 1.0
+      },
+      {
+        "depth": 33,
+        "time": 1.0
+      },
+      {
+        "depth": 30,
+        "time": 2.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 2.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 4.0
+      },
+      {
+        "depth": 9,
+        "time": 6.0
+      },
+      {
+        "depth": 6,
+        "time": 9.0
+      },
+      {
+        "depth": 3,
+        "time": 17.0
+      }
+    ],
+    "filename": "60m20min_18-45_EAN50_VPM1.txt"
+  },
+  {
+    "depth": 60,
+    "time": 20,
+    "bottom_gas": "18/45",
+    "deco_gas": "50@21",
+    "conservatism": 2,
+    "expected_runtime": 75.0,
+    "expected_deco_time": 52.3,
+    "schedule": [
+      {
+        "depth": 60,
+        "time": 20.0
+      },
+      {
+        "depth": 36,
+        "time": 1.0
+      },
+      {
+        "depth": 33,
+        "time": 1.0
+      },
+      {
+        "depth": 30,
+        "time": 2.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 3.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 2.0
+      },
+      {
+        "depth": 12,
+        "time": 4.0
+      },
+      {
+        "depth": 9,
+        "time": 6.0
+      },
+      {
+        "depth": 6,
+        "time": 10.0
+      },
+      {
+        "depth": 3,
+        "time": 18.0
+      }
+    ],
+    "filename": "60m20min_18-45_EAN50_VPM2.txt"
+  },
+  {
+    "depth": 60,
+    "time": 20,
+    "bottom_gas": "18/45",
+    "deco_gas": "50@21",
+    "conservatism": 3,
+    "expected_runtime": 77.0,
+    "expected_deco_time": 54.3,
+    "schedule": [
+      {
+        "depth": 60,
+        "time": 20.0
+      },
+      {
+        "depth": 36,
+        "time": 1.0
+      },
+      {
+        "depth": 33,
+        "time": 1.0
+      },
+      {
+        "depth": 30,
+        "time": 2.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 3.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 3.0
+      },
+      {
+        "depth": 9,
+        "time": 7.0
+      },
+      {
+        "depth": 6,
+        "time": 10.0
+      },
+      {
+        "depth": 3,
+        "time": 19.0
+      }
+    ],
+    "filename": "60m20min_18-45_EAN50_VPM3.txt"
+  },
+  {
+    "depth": 60,
+    "time": 20,
+    "bottom_gas": "18/45",
+    "deco_gas": "50@21",
+    "conservatism": 4,
+    "expected_runtime": 82.0,
+    "expected_deco_time": 59.3,
+    "schedule": [
+      {
+        "depth": 60,
+        "time": 20.0
+      },
+      {
+        "depth": 36,
+        "time": 2.0
+      },
+      {
+        "depth": 33,
+        "time": 1.0
+      },
+      {
+        "depth": 30,
+        "time": 2.0
+      },
+      {
+        "depth": 27,
+        "time": 2.0
+      },
+      {
+        "depth": 24,
+        "time": 3.0
+      },
+      {
+        "depth": 21,
+        "time": 2.0
+      },
+      {
+        "depth": 18,
+        "time": 2.0
+      },
+      {
+        "depth": 15,
+        "time": 3.0
+      },
+      {
+        "depth": 12,
+        "time": 4.0
+      },
+      {
+        "depth": 9,
+        "time": 7.0
+      },
+      {
+        "depth": 6,
+        "time": 11.0
+      },
+      {
+        "depth": 3,
+        "time": 21.0
+      }
+    ],
+    "filename": "60m20min_18-45_EAN50_VPM4.txt"
+  }
+]
