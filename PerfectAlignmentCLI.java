@@ -1,4 +1,6 @@
 import java.util.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Perfect alignment with DecoPlanner using exact iterative algorithm from debug output
@@ -25,10 +27,18 @@ public class PerfectAlignmentCLI {
     private static double[] n2Pressure = new double[16];
     private static double[] hePressure = new double[16];
     
+    // Gas management (matching DecoPlanner's exact structure)
+    private static List<Gas> gases = new ArrayList<>();
+    private static int activeGasID = 0;
+    
+    // EXACT DecoPlanner variable (line 97 in BuhlmannDeco.java)
+    private static int currentMinimumDecoStopDuration;
+    
     public static void main(String[] args) {
         if (args.length < 6) {
-            System.out.println("Usage: java PerfectAlignmentCLI <depth_m> <time_min> <O2/He> <decoO2> <gfLow> <gfHigh>");
-            System.out.println("Example: java PerfectAlignmentCLI 51 25 21/35 50 20 85");
+            System.out.println("Usage: java PerfectAlignmentCLI <depth_m> <time_min> <O2/He> <decoGases> <gfLow> <gfHigh>");
+            System.out.println("Example: java PerfectAlignmentCLI 51 25 21/35 50@21 20 85");
+            System.out.println("Example: java PerfectAlignmentCLI 100 25 8/85 18@21,99@6 20 85");
             System.exit(1);
         }
         
@@ -38,9 +48,34 @@ public class PerfectAlignmentCLI {
         String[] bottomGas = args[2].split("/");
         double bottomO2 = Double.parseDouble(bottomGas[0]);
         double bottomHe = bottomGas.length > 1 ? Double.parseDouble(bottomGas[1]) : 0;
-        double decoO2 = Double.parseDouble(args[3]);
+        String decoGasesStr = args[3];
         double gfLow = Double.parseDouble(args[4]) / 100.0;
         double gfHigh = Double.parseDouble(args[5]) / 100.0;
+        
+        // Set up gas list exactly like DecoPlanner
+        gases.clear();
+        activeGasID = 0;
+        
+        // EXACT initialization from BuhlmannDeco.java line 625
+        currentMinimumDecoStopDuration = (int)Math.round(MIN_DECO_STOP_TIME);
+        
+        // Add bottom gas (DIVE_GAS)
+        gases.add(new Gas(bottomO2, bottomHe, Gas.DIVE_GAS, (int)depth));
+        
+        // Parse and add deco gases (format: "50@21,99@6" or just "50@21")
+        if (!decoGasesStr.equals("0")) {
+            String[] decoGasArray = decoGasesStr.split(",");
+            for (String decoGasStr : decoGasArray) {
+                String[] parts = decoGasStr.split("@");
+                if (parts.length == 2) {
+                    String[] gasParts = parts[0].split("/");
+                    double decoO2 = Double.parseDouble(gasParts[0]);
+                    double decoHe = gasParts.length > 1 ? Double.parseDouble(gasParts[1]) : 0;
+                    int switchDepth = Integer.parseInt(parts[1]);
+                    gases.add(new Gas(decoO2, decoHe, Gas.DECO_GAS, switchDepth));
+                }
+            }
+        }
         
         System.out.println("=== DECOPLANNER DEBUG LOG ===");
         System.out.println("Generated: " + new Date());
@@ -69,7 +104,8 @@ public class PerfectAlignmentCLI {
         System.out.printf("Processing DESCENT: 0.0m to %.1fm at %d m/min\n", depth, DESCENT_RATE);
         
         // Calculate tissue loading during descent
-        loadTissuesDescent(0, depth, descentTime, bottomO2/100.0, bottomHe/100.0);
+        Gas currentGas = gases.get(activeGasID);
+        loadTissuesDescent(0, depth, descentTime, currentGas.oxygenFraction, currentGas.heliumFraction);
         runtime += descentTime;
         currentDepth = depth;
         
@@ -79,7 +115,7 @@ public class PerfectAlignmentCLI {
         System.out.printf("Actual bottom time at %.1fm: %.2f min (total time: %.2f min)\n", depth, bottomTime, totalTimeAtDepth);
         
         // Calculate tissue loading at bottom
-        loadTissuesConstant(depth, bottomTime, bottomO2/100.0, bottomHe/100.0);
+        loadTissuesConstant(depth, bottomTime, currentGas.oxygenFraction, currentGas.heliumFraction);
         runtime += bottomTime;
         
         // FIND FIRST DECO STOP
@@ -92,13 +128,15 @@ public class PerfectAlignmentCLI {
         
         // ASCENT TO FIRST STOP
         double ascentTime = (currentDepth - firstStopDepth) / ASCENT_RATE;
-        loadTissuesAscent(currentDepth, firstStopDepth, ascentTime, bottomO2/100.0, bottomHe/100.0);
+        currentGas = gases.get(activeGasID);
+        loadTissuesAscent(currentDepth, firstStopDepth, ascentTime, currentGas.oxygenFraction, currentGas.heliumFraction);
         runtime += ascentTime;
         currentDepth = firstStopDepth;
         
         // DECOMPRESSION STOPS
         System.out.println("=== DECOMPRESSION SCHEDULE ===");
         List<DecoStop> decoStops = new ArrayList<>();
+        boolean firstStop = true;  // Track first stop for special handling
         
         for (double stopDepth = firstStopDepth; stopDepth > 0; stopDepth -= DECO_STOP_INTERVAL) {
             double nextStopDepth = Math.max(0, stopDepth - DECO_STOP_INTERVAL);
@@ -110,20 +148,75 @@ public class PerfectAlignmentCLI {
             System.out.printf("Next Stop: %.1f, GF Slope: %.4f\n", nextStopDepth, gfSlope);
             System.out.printf("GF for next stop: %.3f (set as current GF)\n\n", gfForNextStop);
             
-            // Determine gas for this stop
-            double gasO2Fraction = bottomO2/100.0;
-            double gasHeFraction = bottomHe/100.0;
-            String gasName = String.format("%d/%d", (int)bottomO2, (int)bottomHe);
-            
-            if (stopDepth <= 21 && decoO2 > 0) {
-                gasO2Fraction = decoO2/100.0;
-                gasHeFraction = 0;
-                gasName = String.format("EAN%d", (int)decoO2);
+            // EXACT DECOPLANENR GAS SWITCHING LOGIC (lines 1735-1770)
+            currentGas = gases.get(activeGasID);
+            // Loop through all gases and see if we need to switch to any of them
+            for (int gasID = 0; gasID < gases.size(); gasID++) {
+                Gas decoGas = gases.get(gasID);
+                // Check that:
+                // 1) Current depth is less or equal to the switchdepth of the gas we're now checking
+                // 2) The switchdepth of the gas we're now checking is less/shallower than the switchdepth of the gas we're currently using
+                // 3) The gas we're checking is a deco gas
+                // 4) The gas we're now checking is not the one we're already using
+                if (stopDepth <= decoGas.switchDepth && decoGas.gasType == Gas.DECO_GAS && activeGasID != gasID) {
+                    // Now we have to check that, IF we are on a deco gas already, make sure the switch depth of the new gas is less than the one we are currently on
+                    if (currentGas.gasType == Gas.DIVE_GAS || (currentGas.gasType == Gas.DECO_GAS && decoGas.switchDepth < currentGas.switchDepth)) {
+                        // Switch to this deco gas
+                        activeGasID = gasID;
+                        currentGas = gases.get(activeGasID);
+                        System.out.printf("Gas switch: Switching to %s at %.1fm\n", currentGas.getGasText(), stopDepth);
+                        
+                        // EXACT DecoPlanner logic from lines 1802-1810
+                        if(decoGas.minimumDecoStopTime > 0)
+                        {
+                            currentMinimumDecoStopDuration = decoGas.minimumDecoStopTime;
+                        }
+                        else
+                        {
+                            //If this deco gas has not defined a minimum stop time, we use the default minimum time, from Settings.
+                            currentMinimumDecoStopDuration = (int)Math.round(MIN_DECO_STOP_TIME);
+                        }
+                    }
+                }
             }
+            
+            // Use current active gas
+            double gasO2Fraction = currentGas.oxygenFraction;
+            double gasHeFraction = currentGas.heliumFraction;
+            String gasName = currentGas.getGasText();
             
             // Calculate stop time using exact iterative method
             double stopTime = calculateStopTime(stopDepth, nextStopDepth, gfForNextStop, 
                                                gasO2Fraction, gasHeFraction, runtime);
+            
+            // EXACT DecoPlanner first stop special handling (lines 1867-1887)
+            double displayStopTime;
+            if(firstStop)
+            {
+                //We won't report the EXACT times for the first stop, since the DECOMPRESSION_STOP-function adjusted the stopDuration to end up on a whole 
+                // multiplier of the Minimum_Deco_Stop_Time. 
+                //So for the first deco stop we set endRunTime to follow the real schedule, but we adjust the startRunTime based on the Minimum_Deco_Stop_Time
+                
+                //Now adjust the stopDuration, just to make for a nice-looking (rounded values) table
+                double adjustedStopDuration;
+                //BUT, ONLY IF it's NOT already a whole number
+                if(stopTime % 1 == 0)
+                {
+                    adjustedStopDuration = stopTime;
+                }
+                else
+                {
+                    adjustedStopDuration = Math.round((stopTime/currentMinimumDecoStopDuration) + 0.5) * currentMinimumDecoStopDuration;
+                }
+                displayStopTime = roundToOneDecimal(adjustedStopDuration);
+                firstStop = false;  // No longer first stop
+            }
+            else
+            {
+                // For subsequent stops, include ascent time in display (exact from lines 1888-1893)
+                double currentAscentTime = DECO_STOP_INTERVAL / (double)ASCENT_RATE;
+                displayStopTime = roundToOneDecimal(stopTime + currentAscentTime);
+            }
             
             runtime += stopTime;
             
@@ -134,7 +227,7 @@ public class PerfectAlignmentCLI {
                 runtime += ascentTime;
             }
             
-            decoStops.add(new DecoStop(stopDepth, stopTime, gasName));
+            decoStops.add(new DecoStop(stopDepth, displayStopTime, gasName));
         }
         
         // Final ascent to surface
@@ -144,15 +237,16 @@ public class PerfectAlignmentCLI {
         // Round runtime to match DecoPlanner's display
         double displayRuntime = Math.round(runtime);
         
-        // Output results
-        System.out.println("\nDive Segments:");
-        System.out.printf("SEGMENT: DESCENT from 0.0m to %.1fm, Duration: %.2f min\n", depth, descentTime);
-        System.out.printf("SEGMENT: BOTTOM at %.1fm, Duration: %.2f min\n", depth, bottomTime);
+        // Output results using DecoPlanner format
+        System.out.println("\nDecompression Schedule:");
+        System.out.println((int)depth + "m for " + (int)Math.round(totalTimeAtDepth) + " min");
         
         double totalDecoTime = 0;
         for (DecoStop stop : decoStops) {
-            System.out.printf("SEGMENT: STOP at %.0fm, Duration: %.2f min, Gas: %s\n", 
-                            stop.depth, stop.time, stop.gas);
+            // Round to one decimal like DecoPlanner, then format like DecoPlanner
+            double roundedTime = roundToOneDecimal(stop.time);
+            String formattedTime = formatLikeDecoPlanner(roundedTime);
+            System.out.println((int)stop.depth + "m for " + formattedTime + " min");
             totalDecoTime += stop.time;
         }
         
@@ -179,10 +273,10 @@ public class PerfectAlignmentCLI {
         double[] n2Original = Arrays.copyOf(n2Pressure, 16);
         double[] heOriginal = Arrays.copyOf(hePressure, 16);
         
-        // Match DecoPlanner's EXACT algorithm from BuhlmannDeco.java lines 2630-2635
-        double lastRunTime = currentRuntime;
-        double roundUpOperation = Math.floor(lastRunTime) + MIN_DECO_STOP_TIME;
-        segmentTime = roundUpOperation - lastRunTime;
+        // EXACT DecoPlanner algorithm from BuhlmannDeco.java lines 2670-2677
+        double Last_Run_Time = currentRuntime;
+        double Round_Up_Operation = Math.floor(Last_Run_Time) + currentMinimumDecoStopDuration;
+        segmentTime = Round_Up_Operation - Last_Run_Time;
         tempSegmentTime = segmentTime;
         
         boolean doLoop;
@@ -202,7 +296,7 @@ public class PerfectAlignmentCLI {
             
             // Calculate ceiling
             double ceiling = calculateCeiling(gradientFactor);
-            double roundedCeiling = Math.round(ceiling * 100) / 100.0;
+            double roundedCeiling = roundToTwoDecimals(ceiling);
             
             System.out.printf("  Iteration %d: Segment_Time=%.2f, Temp_Segment_Time=%.2f\n", 
                             iteration, segmentTime, tempSegmentTime);
@@ -215,20 +309,17 @@ public class PerfectAlignmentCLI {
                                 i+1, n2Pressure[i], hePressure[i], n2Pressure[i] + hePressure[i]);
             }
             
-            // Match DecoPlanner's exact ceiling check logic from line 2700
+            // EXACT DecoPlanner ceiling check logic from line 2743
             if (roundedCeiling > nextStopDepth) {
-                // Need more time - match DecoPlanner lines 2703-2705
-                segmentTime = MIN_DECO_STOP_TIME;
-                tempSegmentTime += segmentTime;
+                // EXACT DecoPlanner lines 2746-2749
+                segmentTime = currentMinimumDecoStopDuration;  // currentMinimumDecoStopDuration
+                double Time_Counter = tempSegmentTime;
+                tempSegmentTime = Time_Counter + currentMinimumDecoStopDuration;  // currentMinimumDecoStopDuration
                 doLoop = true;
                 System.out.println("    Need more time - continuing iterations");
             }
             
-            // Safety check - prevent infinite loop
-            if (iteration > 20) {
-                System.out.println("    WARNING: Max iterations reached");
-                break;
-            }
+            // DecoPlanner has no iteration limit - removed to match exactly
         } while (doLoop);
         
         System.out.println("=== DECOMPRESSION_STOP END ===");
@@ -325,6 +416,59 @@ public class PerfectAlignmentCLI {
     // Haldane equation for tissue loading (matches DecoPlanner)
     private static double haldaneEquation(double initialPressure, double inspiredPressure, double k, double time) {
         return inspiredPressure + (initialPressure - inspiredPressure) * Math.exp(-k * time);
+    }
+    
+    // EXACT DecoPlanner rounding method (Util.roundToTwoDecimals)
+    private static double roundToTwoDecimals(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return value;
+        }
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+    
+    // EXACT DecoPlanner rounding method (Util.roundToOneDecimal)
+    private static double roundToOneDecimal(double val) {
+        double temp = Math.rint(val * 10);
+        return temp / 10;
+    }
+    
+    // EXACT DecoPlanner formatting method (Util.format)
+    private static String formatLikeDecoPlanner(double d) {
+        if(d == (long) d)
+            return String.format("%d",(long)d);
+        else
+            return String.format("%s",d);
+    }
+    
+    static class Gas {
+        public static final int DIVE_GAS = 1;
+        public static final int DECO_GAS = 2;
+        
+        public int gasType;
+        public double oxygenFraction;
+        public double heliumFraction;
+        public double nitrogenFraction;
+        public int switchDepth;
+        public int minimumDecoStopTime;
+        
+        public Gas(double oxygenPercent, double heliumPercent, int gasType, int switchDepth) {
+            this.gasType = gasType;
+            this.oxygenFraction = oxygenPercent / 100.0;
+            this.heliumFraction = heliumPercent / 100.0;
+            this.nitrogenFraction = 1.0 - this.oxygenFraction - this.heliumFraction;
+            this.switchDepth = switchDepth;
+            this.minimumDecoStopTime = 0;
+        }
+        
+        public String getGasText() {
+            if (heliumFraction > 0) {
+                return String.format("%d/%d", (int)(oxygenFraction*100), (int)(heliumFraction*100));
+            } else {
+                return String.format("EAN%d", (int)(oxygenFraction*100));
+            }
+        }
     }
     
     static class DecoStop {

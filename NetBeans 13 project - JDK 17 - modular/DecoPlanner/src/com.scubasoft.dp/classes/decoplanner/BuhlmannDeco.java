@@ -1136,13 +1136,56 @@ System.out.println();
             fileOut.println("Total Runtime: " + String.format("%.1f", currentDive.currentRunTime) + " min");
             fileOut.println("Total Deco Duration: " + String.format("%.1f", currentDive.totalDecoDuration) + " min");
             
-            fileOut.println("\nDecompression Schedule:");
+            // Add gas configuration section
+            fileOut.println("\n=== GAS CONFIGURATION ===");
+            if (currentDive.gases != null) {
+                for (int i = 0; i < currentDive.gases.size(); i++) {
+                    Gas gas = currentDive.gases.get(i);
+                    String gasName = "";
+                    if (gas.heliumFraction > 0) {
+                        gasName = String.format("%.0f/%.0f", gas.oxygenFraction*100, gas.heliumFraction*100);
+                    } else if (gas.oxygenFraction == 0.21) {
+                        gasName = "Air";
+                    } else if (gas.oxygenFraction > 0.21) {
+                        gasName = String.format("EAN%.0f", gas.oxygenFraction*100);
+                    } else {
+                        gasName = String.format("%.0f%% O2", gas.oxygenFraction*100);
+                    }
+                    
+                    if (gas.gasType == Gas.DIVE_GAS) {
+                        fileOut.println("Bottom Gas: " + gasName + 
+                            String.format(" (%.0f%% O2, %.0f%% He, %.0f%% N2)", 
+                            gas.oxygenFraction*100, gas.heliumFraction*100, gas.nitrogenFraction*100));
+                    } else {
+                        fileOut.println("Deco Gas " + i + ": " + gasName + 
+                            String.format(" (%.0f%% O2, %.0f%% He, %.0f%% N2) @ %dm switch depth", 
+                            gas.oxygenFraction*100, gas.heliumFraction*100, gas.nitrogenFraction*100, gas.switchDepth));
+                    }
+                }
+            }
+            
+            fileOut.println("\n=== DECOMPRESSION SCHEDULE ===");
             if (currentDive.resultingDecoPlan != null) {
                 for (Object obj : currentDive.resultingDecoPlan) {
                     if (obj instanceof DecoTableSegment) {
                         DecoTableSegment stop = (DecoTableSegment)obj;
-                        fileOut.println(String.format("%.0fm for %s min", 
-                            stop.getDepthNumber(), stop.getDuration()));
+                        
+                        // Format gas name
+                        String gasName = "";
+                        double o2 = stop.getOxygenPercentage();
+                        double he = stop.getHeliumPercentage();
+                        if (he > 0) {
+                            gasName = String.format("(%.0f/%.0f)", o2, he);
+                        } else if (o2 == 21) {
+                            gasName = "(Air)";
+                        } else if (o2 > 21) {
+                            gasName = String.format("(EAN%.0f)", o2);
+                        } else {
+                            gasName = String.format("(%.0f%% O2)", o2);
+                        }
+                        
+                        fileOut.println(String.format("%.0fm for %s min %s", 
+                            stop.getDepthNumber(), stop.getDuration(), gasName));
                     }
                 }
             }
