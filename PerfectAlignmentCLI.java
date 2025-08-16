@@ -119,8 +119,10 @@ public class PerfectAlignmentCLI {
         runtime += bottomTime;
         
         // FIND FIRST DECO STOP
+        double ceiling = calculateCeiling(gfLow);
         double firstStopDepth = findFirstStop(gfLow);
-        System.out.printf("\nFirst stop depth (using GF Low %.2f): %.1fm\n", gfLow, firstStopDepth);
+        System.out.printf("\nRaw ceiling depth: %.3fm\n", ceiling);
+        System.out.printf("First stop depth (using GF Low %.2f): %.1fm\n", gfLow, firstStopDepth);
         
         // Calculate gradient factor slope
         double gfSlope = (gfHigh - gfLow) / (0 - firstStopDepth);
@@ -338,9 +340,10 @@ public class PerfectAlignmentCLI {
         // Find the ceiling depth where we must stop
         double ceiling = calculateCeiling(gfLow);
         
-        // Round UP to next stop interval
+        // EXACT DecoPlanner rounding algorithm (BuhlmannDeco.java lines 1619-1620)
         if (ceiling > 0) {
-            return Math.ceil(ceiling / DECO_STOP_INTERVAL) * DECO_STOP_INTERVAL;
+            double roundingOperation = (ceiling / DECO_STOP_INTERVAL) + 0.5;
+            return Math.round(roundingOperation) * DECO_STOP_INTERVAL;
         }
         return 0;
     }
