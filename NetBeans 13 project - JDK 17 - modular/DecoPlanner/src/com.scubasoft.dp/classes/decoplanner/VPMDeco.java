@@ -6,6 +6,11 @@ package decoplanner;
 
 import java.util.ArrayList;
 import javafx.collections.FXCollections;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * The "Schreiner" equation:
@@ -54,6 +59,11 @@ public final class VPMDeco
 
     private static double CNStoxicityPercentage;
     private static double OTUbuildup;
+    
+    // Debug logging
+    private static PrintWriter debugLog;
+    private static boolean debugEnabled = true;
+    private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
 
     // N2 compartment pressures
@@ -341,33 +351,33 @@ k = time constant (in this case, half-time constant)
     // Debug method to trace VPM algorithm execution
     private static void debugVPM(String phase) {
         if (phase.equals("INIT")) {
-            System.out.println("\n=== VPM DEBUG: INITIALIZATION ===");
-            System.out.println("Conservatism Setting: " + Settings.vpmConservatismSetting);
-            System.out.println("Critical Radius N2: " + Settings.Critical_Radius_N2_Microns + " microns");
-            System.out.println("Critical Radius He: " + Settings.Critical_Radius_He_Microns + " microns");
+            logVPMDebug("\n=== VPM DEBUG: INITIALIZATION ===");
+            logVPMDebug("Conservatism Setting: " + Settings.vpmConservatismSetting);
+            logVPMDebug("Critical Radius N2: " + Settings.Critical_Radius_N2_Microns + " microns");
+            logVPMDebug("Critical Radius He: " + Settings.Critical_Radius_He_Microns + " microns");
         }
         else if (phase.equals("BOTTOM")) {
-            System.out.println("\n=== VPM DEBUG: AFTER BOTTOM TIME ===");
-            System.out.println("Run Time: " + currentDive.currentRunTime);
+            logVPMDebug("\n=== VPM DEBUG: AFTER BOTTOM TIME ===");
+            logVPMDebug("Run Time: " + currentDive.currentRunTime);
             // Show first 4 compartments
             for (int i = 0; i < 4; i++) {
-                System.out.printf("Comp %d: N2=%.3f He=%.3f MaxCrush=%.3f\n",
+                logVPMDebug(String.format("Comp %d: N2=%.3f He=%.3f MaxCrush=%.3f",
                     i+1, nitrogenCompartmentPressure[i], heliumCompartmentPressure[i],
-                    Max_Crushing_Pressure_N2[i]);
+                    Max_Crushing_Pressure_N2[i]));
             }
         }
         else if (phase.equals("GRADIENT")) {
-            System.out.println("\n=== VPM DEBUG: INITIAL GRADIENTS ===");
+            logVPMDebug("\n=== VPM DEBUG: INITIAL GRADIENTS ===");
             // Show first 4 compartments
             for (int i = 0; i < 4; i++) {
-                System.out.printf("Comp %d: InitGrad N2=%.4f He=%.4f\n",
-                    i+1, Initial_Allowable_Gradient_N2[i], Initial_Allowable_Gradient_He[i]);
+                logVPMDebug(String.format("Comp %d: InitGrad N2=%.4f He=%.4f",
+                    i+1, Initial_Allowable_Gradient_N2[i], Initial_Allowable_Gradient_He[i]));
             }
         }
         else if (phase.equals("CEILING")) {
             double ceiling = CALC_ASCENT_CEILING();
-            System.out.println("\n=== VPM DEBUG: FIRST CEILING ===");
-            System.out.printf("Ceiling: %.1f m\n", ceiling);
+            logVPMDebug("\n=== VPM DEBUG: FIRST CEILING ===");
+            logVPMDebug(String.format("Ceiling: %.1f m", ceiling));
 
             // Find controlling compartment
             for (int i = 0; i < 16; i++) {
@@ -380,16 +390,16 @@ k = time constant (in this case, half-time constant)
                 double compCeiling = tolerated - Settings.getSurfacePressure();
 
                 if (Math.abs(compCeiling - ceiling) < 0.1) {
-                    System.out.printf("Controlling: Comp %d, Loading=%.3f, Gradient=%.4f\n",
-                        i+1, gasLoading, weightedGrad);
+                    logVPMDebug(String.format("Controlling: Comp %d, Loading=%.3f, Gradient=%.4f",
+                        i+1, gasLoading, weightedGrad));
                     break;
                 }
             }
         }
         else if (phase.equals("SCHEDULE")) {
-            System.out.println("\n=== VPM DEBUG: FINAL SCHEDULE ===");
-            System.out.println("First Stop: " + firstStopDepthOfTotalAscent + "m");
-            System.out.println("Total Deco Time: " + (currentDive.currentRunTime - 25) + " min");
+            logVPMDebug("\n=== VPM DEBUG: FINAL SCHEDULE ===");
+            logVPMDebug("First Stop: " + firstStopDepthOfTotalAscent + "m");
+            logVPMDebug("Total Deco Time: " + (currentDive.currentRunTime - 25) + " min");
         }
     }
 
@@ -436,6 +446,22 @@ k = time constant (in this case, half-time constant)
             fw.close();
         } catch (Exception e) {
             // Ignore file write errors
+        }
+        
+        // Initialize debug logging (only if not already open)
+        if (debugEnabled && debugLog == null) {
+            try {
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                String logFileName = "decoplanner_debug_" + timestamp + ".txt";
+                debugLog = new PrintWriter(new FileWriter(logFileName));
+                debugLog.println("=== DECOPLANNER VPM DEBUG LOG ===");
+                debugLog.println("Generated: " + new Date());
+                debugLog.println();
+                logVPMSettings();
+            } catch (IOException e) {
+                System.err.println("Could not create VPM debug log: " + e.getMessage());
+                debugEnabled = false;
+            }
         }
         
         Constant_Pressure_Other_Gases = (Settings.Pressure_Other_Gases_mmHg/760.0) * Settings.Depth_Per_ATM;
@@ -4666,5 +4692,33 @@ C===============================================================================
                 nitrogenCompartmentPressure[i] = HALDANE_EQUATION(Initial_Nitrogen_Pressure, Inspired_Nitrogen_Pressure,kN2[i], Time_at_Altitude_Before_Dive);
             }
         }
+    }
+    
+    // Debug logging methods
+    private static void logVPMSettings() {
+        if (!debugEnabled || debugLog == null) return;
+        
+        debugLog.println("=== VPM SETTINGS ===");
+        debugLog.println("Metric: " + Settings.metric);
+        debugLog.println("Surface Pressure: " + Settings.getSurfacePressure() + " bar");
+        debugLog.println("VPM Conservatism: " + Settings.vpmConservatismSetting);
+        debugLog.println("Critical Radius N2: " + Settings.Critical_Radius_N2_Microns + " microns");
+        debugLog.println("Critical Radius He: " + Settings.Critical_Radius_He_Microns + " microns");
+        debugLog.println("Last Stop Depth: 3m"); // TODO: Get actual setting
+        debugLog.println("Descent Rate: " + Settings.descentRate + " m/min");
+        debugLog.println("Ascent Rate: " + Settings.ascentRate + " m/min");
+        debugLog.println();
+        
+        debugLog.println("=== GASES ===");
+        // TODO: Log gas configuration from dive object
+        debugLog.println("Gas configuration logging not yet implemented for VPM");
+        debugLog.println();
+        debugLog.flush();
+    }
+    
+    private static void logVPMDebug(String message) {
+        if (!debugEnabled || debugLog == null) return;
+        debugLog.println("[" + timeFormat.format(new Date()) + "] " + message);
+        debugLog.flush();
     }
 }
