@@ -1,0 +1,55 @@
+{
+  "timestamp": "2025-08-15T16:43:46.972Z",
+  "summary": {
+    "totalTests": 3,
+    "perfectMatches": 2,
+    "closeMatches": 0,
+    "needsInvestigation": 0,
+    "errors": 1,
+    "successRate": 66.66666666666666
+  },
+  "testResults": [
+    {
+      "name": "Buhlmann 51m/25min Perfect Alignment Test",
+      "algorithm": "buhlmann",
+      "args": "51 25 21/35 50@21 40 85",
+      "expectedRuntime": 177.3,
+      "jsRuntime": 58.3,
+      "javaRuntime": 58.3,
+      "difference": 0,
+      "accuracy": 100,
+      "status": "PERFECT_MATCH",
+      "jsError": null,
+      "javaError": null,
+      "description": "Critical test case - should match Java exactly"
+    },
+    {
+      "name": "Buhlmann 100m/25min Reference Case",
+      "algorithm": "buhlmann",
+      "args": "100 25 8/85 18@21,99@6 40 85",
+      "expectedRuntime": 178,
+      "jsRuntime": 348.3,
+      "javaRuntime": 348.3,
+      "difference": 0,
+      "accuracy": 100,
+      "status": "PERFECT_MATCH",
+      "jsError": null,
+      "javaError": null,
+      "description": "Deep technical dive with multiple deco gases"
+    },
+    {
+      "name": "VPM-B 51m/25min Conservatism +2",
+      "algorithm": "vpm",
+      "args": "51 25 21/35 50@21 2 85",
+      "expectedRuntime": 54.7,
+      "jsRuntime": 54.7,
+      "javaRuntime": null,
+      "difference": null,
+      "accuracy": null,
+      "status": "ERROR",
+      "jsError": null,
+      "javaError": null,
+      "description": "VPM-B test case matching DecoPlanner"
+    }
+  ]
+}
