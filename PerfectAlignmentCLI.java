@@ -96,10 +96,10 @@ public class PerfectAlignmentCLI {
         System.out.println("Water Vapor Pressure: " + WATER_VAPOR_PRESSURE + " msw");
         System.out.println();
         
-        // Initialize tissues at surface (in ATA)
-        double inspiredN2_ATA = (1.0 - WATER_VAPOR_PRESSURE / SURFACE_PRESSURE) * 0.79;
+        // Initialize tissues at surface (EXACT DecoPlanner line 528)
+        double inspiredN2_Surface = (SURFACE_PRESSURE - WATER_VAPOR_PRESSURE) * 0.79;
         for (int i = 0; i < 16; i++) {
-            n2Pressure[i] = inspiredN2_ATA;
+            n2Pressure[i] = inspiredN2_Surface;
             hePressure[i] = 0;
         }
         
@@ -128,14 +128,31 @@ public class PerfectAlignmentCLI {
         // FIND FIRST DECO STOP
         System.out.printf("\nTissue pressures after %dm/%dmin:\n", (int)depth, (int)time);
         for (int i = 0; i < 4; i++) {
-            System.out.printf("Comp %d: N2=%.4f He=%.4f Total=%.4f\n", 
+            System.out.printf("Comp %d: N2=%.6f He=%.6f Total=%.6f\n", 
                             i+1, n2Pressure[i], hePressure[i], n2Pressure[i] + hePressure[i]);
         }
         
         double ceiling = calculateCeiling(gfLow);
         double firstStopDepth = findFirstStop(gfLow);
         System.out.printf("\nRaw ceiling depth: %.3fm\n", ceiling);
-        System.out.printf("First stop depth (using GF Low %.2f): %.1fm\n", gfLow, firstStopDepth);
+        System.out.printf("Initial first stop depth: %.1fm\n", firstStopDepth);
+        
+        // EXACT DecoPlanner PROJECTED_ASCENT logic (lines 1705-1709)
+        // Test if we can move first stop one interval shallower due to off-gassing during ascent
+        if (firstStopDepth > 0) {
+            double testDepth = firstStopDepth - DECO_STOP_INTERVAL; // Test 63m instead of 66m
+            double projectedStopDepth = projectedAscent(currentDepth, -ASCENT_RATE, testDepth, DECO_STOP_INTERVAL, gfLow);
+            System.out.printf("Testing shallower stop: %.1fm\n", testDepth);
+            System.out.printf("Projected ascent result: %.1fm\n", projectedStopDepth);
+            
+            if (projectedStopDepth < firstStopDepth) {
+                System.out.printf("Moving first stop from %.1fm to %.1fm (off-gassing during ascent)\n", 
+                                 firstStopDepth, projectedStopDepth);
+                firstStopDepth = projectedStopDepth;
+            }
+        }
+        
+        System.out.printf("Final first stop depth: %.1fm\n", firstStopDepth);
         
         // Calculate gradient factor slope
         double gfSlope = (gfHigh - gfLow) / (0 - firstStopDepth);
@@ -349,16 +366,124 @@ public class PerfectAlignmentCLI {
         return tempSegmentTime;
     }
     
+    private static double calculateStartOfDecoZone(double startingDepth) {
+        // Simplified approximation of DecoPlanner's CALC_START_OF_DECO_ZONE
+        // In reality, this uses bisection method to find exact depth during ascent with off-gassing
+        // For now, find the leading compartment and estimate where deco obligations begin
+        
+        double maxTissuePressure = 0.0;
+        int leadingCompartment = -1;
+        
+        // Find the leading compartment (highest tissue pressure)
+        for (int i = 0; i < 16; i++) {
+            double totalTissuePressure = n2Pressure[i] + hePressure[i];
+            if (totalTissuePressure > maxTissuePressure) {
+                maxTissuePressure = totalTissuePressure;
+                leadingCompartment = i;
+            }
+            System.out.printf("Comp %d: Total tissue pressure=%.1f msw\n", 
+                            i+1, totalTissuePressure);
+        }
+        
+        System.out.printf("Leading compartment: %d with %.1f msw\n", 
+                         leadingCompartment+1, maxTissuePressure);
+        
+        // For now, use the current depth as start of deco zone
+        // The real DecoPlanner implementation is much more sophisticated
+        System.out.printf("Using starting depth %.1fm as deco zone start (simplified)\n", startingDepth);
+        
+        return startingDepth;
+    }
+    
+    private static double projectedAscent(double startingDepth, double rate, double decoStopDepth, double stepSize, double gfLow) {
+        // EXACT DecoPlanner PROJECTED_ASCENT implementation (lines 2011-2111)
+        // Simulates ascent to test if deco ceiling will be violated during ascent
+        
+        double newAmbientPressure = SURFACE_PRESSURE + decoStopDepth;
+        double startingAmbientPressure = SURFACE_PRESSURE + startingDepth;
+        
+        // Save current tissue state
+        double[] initialN2 = Arrays.copyOf(n2Pressure, 16);
+        double[] initialHe = Arrays.copyOf(hePressure, 16);
+        
+        // Current gas fractions during ascent
+        Gas currentGas = gases.get(activeGasID);
+        double initialInspiredHe = (startingAmbientPressure - WATER_VAPOR_PRESSURE) * currentGas.heliumFraction;
+        double initialInspiredN2 = (startingAmbientPressure - WATER_VAPOR_PRESSURE) * currentGas.nitrogenFraction;
+        double heliumRate = rate * currentGas.heliumFraction;
+        double nitrogenRate = rate * currentGas.nitrogenFraction;
+        
+        boolean loop;
+        do {
+            loop = false;
+            double endingAmbientPressure = newAmbientPressure;
+            double segmentTime = (endingAmbientPressure - startingAmbientPressure) / rate;
+            
+            // Simulate tissue loading during ascent for all compartments
+            double[] tempN2 = new double[16];
+            double[] tempHe = new double[16];
+            double[] tempGasLoading = new double[16];
+            double[] allowableGasLoading = new double[16];
+            
+            for (int i = 0; i < 16; i++) {
+                // EXACT DecoPlanner Schreiner equation (lines 2093-2095)
+                double n2TimeConstant = Math.log(2) / N2_HALFTIME[i];
+                double heTimeConstant = Math.log(2) / HE_HALFTIME[i];
+                
+                tempHe[i] = initialInspiredHe + heliumRate * (segmentTime - 1/heTimeConstant) - 
+                           (initialInspiredHe - initialHe[i] - (heliumRate/heTimeConstant)) * Math.exp(-heTimeConstant * segmentTime);
+                tempN2[i] = initialInspiredN2 + nitrogenRate * (segmentTime - 1/n2TimeConstant) - 
+                           (initialInspiredN2 - initialN2[i] - (nitrogenRate/n2TimeConstant)) * Math.exp(-n2TimeConstant * segmentTime);
+                
+                tempGasLoading[i] = tempHe[i] + tempN2[i];
+                
+                // EXACT DecoPlanner coefficients (lines 2096-2098)
+                double coefficientA = (tempHe[i] * HE_A[i] + tempN2[i] * N2_A[i]) / tempGasLoading[i];
+                double coefficientB = (tempHe[i] * HE_B[i] + tempN2[i] * N2_B[i]) / tempGasLoading[i];
+                allowableGasLoading[i] = endingAmbientPressure * (gfLow/coefficientB - gfLow + 1.0) + gfLow * coefficientA;
+            }
+            
+            // Check if any compartment exceeds allowable loading (lines 2102-2107)
+            for (int i = 0; i < 16; i++) {
+                if (tempGasLoading[i] > allowableGasLoading[i]) {
+                    newAmbientPressure = endingAmbientPressure + stepSize;
+                    decoStopDepth = decoStopDepth + stepSize;
+                    loop = true;
+                    break;
+                }
+            }
+        } while (loop);
+        
+        return decoStopDepth;
+    }
+    
     private static double findFirstStop(double gfLow) {
         // Find the ceiling depth where we must stop
         double ceiling = calculateCeiling(gfLow);
         
-        // EXACT DecoPlanner rounding algorithm (BuhlmannDeco.java lines 1619-1620)
-        if (ceiling > 0) {
-            double roundingOperation = (ceiling / DECO_STOP_INTERVAL) + 0.5;
-            return Math.round(roundingOperation) * DECO_STOP_INTERVAL;
+        if (ceiling <= 0) {
+            return 0;
         }
-        return 0;
+        
+        // EXACT DecoPlanner special rounding logic (BuhlmannDeco.java lines 1606-1622)
+        double remainder = ceiling % DECO_STOP_INTERVAL;
+        System.out.printf("Ceiling: %.3f, Remainder: %.3f, 10%% of interval: %.3f\n", 
+                         ceiling, remainder, DECO_STOP_INTERVAL * 0.10);
+        
+        // Check if we are super close, but deeper than a stop depth
+        if (remainder <= (DECO_STOP_INTERVAL * 0.10)) {
+            // Round DOWN to nearest deco stop interval - lines 1611-1613
+            // Math.floor(ceiling) in DecoPlanner context means floor to nearest deco stop
+            double flooredStop = Math.floor(ceiling / DECO_STOP_INTERVAL) * DECO_STOP_INTERVAL;
+            System.out.printf("Using floor rounding: %.3f -> %.1f\n", ceiling, flooredStop);
+            return flooredStop;
+        } else {
+            // Normal rounding algorithm - lines 1619-1620
+            double roundingOperation = (ceiling / DECO_STOP_INTERVAL) + 0.5;
+            double normalStop = Math.round(roundingOperation) * DECO_STOP_INTERVAL;
+            System.out.printf("Using normal rounding: %.3f -> %.1f\n", ceiling, normalStop);
+            return normalStop;
+        }
     }
     
     private static double calculateCeiling(double gradientFactor) {
@@ -367,14 +492,20 @@ public class PerfectAlignmentCLI {
         for (int i = 0; i < 16; i++) {
             double totalPressure = n2Pressure[i] + hePressure[i];
             
-            // Calculate tolerated ambient pressure
-            double a = (n2Pressure[i] * N2_A[i] + hePressure[i] * HE_A[i]) / totalPressure;
-            double b = (n2Pressure[i] * N2_B[i] + hePressure[i] * HE_B[i]) / totalPressure;
+            // EXACT DecoPlanner calculation (lines 1272-1273)
+            double a = (hePressure[i] * HE_A[i] + n2Pressure[i] * N2_A[i]) / totalPressure;
+            double b = (hePressure[i] * HE_B[i] + n2Pressure[i] * N2_B[i]) / totalPressure;
             
-            // Apply gradient factor
-            double toleratedPressureATA = (totalPressure - a * gradientFactor) / (gradientFactor / b - gradientFactor + 1);
-            // Convert back to depth in msw
-            double ceiling = (toleratedPressureATA - 1.0) * SURFACE_PRESSURE;
+            // EXACT DecoPlanner formula (line 1275)
+            double toleratedAmbientPressure = (totalPressure - a * gradientFactor) / (gradientFactor / b - gradientFactor + 1.0);
+            
+            // Pressure cannot be less than zero (lines 1280-1283)
+            if (toleratedAmbientPressure < 0.0) {
+                toleratedAmbientPressure = 0.0;
+            }
+            
+            // EXACT DecoPlanner ceiling calculation (line 1295)
+            double ceiling = toleratedAmbientPressure - SURFACE_PRESSURE;
             
             if (ceiling > maxCeiling) {
                 maxCeiling = ceiling;
@@ -385,52 +516,51 @@ public class PerfectAlignmentCLI {
     }
     
     private static void loadTissuesConstant(double depth, double time, double gasO2, double gasHe) {
-        // Convert to ATA for tissue calculations (DecoPlanner uses ATA internally)
-        double ambientPressureATA = (SURFACE_PRESSURE + depth) / SURFACE_PRESSURE;
-        double inspiredN2 = (ambientPressureATA - WATER_VAPOR_PRESSURE / SURFACE_PRESSURE) * (1 - gasO2 - gasHe);
-        double inspiredHe = (ambientPressureATA - WATER_VAPOR_PRESSURE / SURFACE_PRESSURE) * gasHe;
+        // EXACT DecoPlanner pressure calculations (msw units)
+        double ambientPressure = SURFACE_PRESSURE + depth;
+        double inspiredN2 = (ambientPressure - WATER_VAPOR_PRESSURE) * (1 - gasO2 - gasHe);
+        double inspiredHe = (ambientPressure - WATER_VAPOR_PRESSURE) * gasHe;
         
         // Debug pressure calculations
         if (depth == 100.0) {
-            System.out.printf("DEBUG: AmbientATA=%.3f, InspiredN2=%.3f, InspiredHe=%.3f\n", 
-                             ambientPressureATA, inspiredN2, inspiredHe);
+            System.out.printf("DEBUG: Ambient=%.3f msw, InspiredN2=%.3f, InspiredHe=%.3f\n", 
+                             ambientPressure, inspiredN2, inspiredHe);
+            System.out.printf("DEBUG: Gas fractions O2=%.3f, He=%.3f, N2=%.3f\n", 
+                             gasO2, gasHe, (1 - gasO2 - gasHe));
         }
         
         for (int i = 0; i < 16; i++) {
-            // Haldane equation
-            n2Pressure[i] = inspiredN2 + (n2Pressure[i] - inspiredN2) * 
-                           Math.exp(-Math.log(2) * time / N2_HALFTIME[i]);
-            hePressure[i] = inspiredHe + (hePressure[i] - inspiredHe) * 
-                           Math.exp(-Math.log(2) * time / HE_HALFTIME[i]);
+            // EXACT DecoPlanner Haldane equation (line 411)
+            double n2TimeConstant = Math.log(2) / N2_HALFTIME[i];
+            double heTimeConstant = Math.log(2) / HE_HALFTIME[i];
+            
+            n2Pressure[i] = n2Pressure[i] + (inspiredN2 - n2Pressure[i]) * (1 - Math.exp(-n2TimeConstant * time));
+            hePressure[i] = hePressure[i] + (inspiredHe - hePressure[i]) * (1 - Math.exp(-heTimeConstant * time));
         }
     }
     
     private static void loadTissuesDescent(double startDepth, double endDepth, double time, 
                                           double gasO2, double gasHe) {
-        double rate = (endDepth - startDepth) / time;
+        // EXACT DecoPlanner Schreiner equation implementation
+        double startPressure = SURFACE_PRESSURE + startDepth;
+        double endPressure = SURFACE_PRESSURE + endDepth;
+        double rate = (endPressure - startPressure) / time;
+        
+        // EXACT DecoPlanner calculations (lines 367-368, 381-382)
+        double Pi0_N2 = (startPressure - WATER_VAPOR_PRESSURE) * (1 - gasO2 - gasHe);
+        double Pi0_He = (startPressure - WATER_VAPOR_PRESSURE) * gasHe;
+        double R_N2 = rate * (1 - gasO2 - gasHe);
+        double R_He = rate * gasHe;
         
         for (int i = 0; i < 16; i++) {
-            double n2k = Math.log(2) / N2_HALFTIME[i];
-            double hek = Math.log(2) / HE_HALFTIME[i];
+            double kN2 = Math.log(2) / N2_HALFTIME[i];
+            double kHe = Math.log(2) / HE_HALFTIME[i];
             
-            // Convert to ATA for tissue calculations
-            double startPressureATA = (SURFACE_PRESSURE + startDepth) / SURFACE_PRESSURE;
-            double endPressureATA = (SURFACE_PRESSURE + endDepth) / SURFACE_PRESSURE;
-            double waterVaporATA = WATER_VAPOR_PRESSURE / SURFACE_PRESSURE;
-            
-            double inspiredN2Start = (startPressureATA - waterVaporATA) * (1 - gasO2 - gasHe);
-            double inspiredN2End = (endPressureATA - waterVaporATA) * (1 - gasO2 - gasHe);
-            double inspiredHeStart = (startPressureATA - waterVaporATA) * gasHe;
-            double inspiredHeEnd = (endPressureATA - waterVaporATA) * gasHe;
-            
-            // Schreiner equation
-            double n2Rate = (inspiredN2End - inspiredN2Start) / time;
-            n2Pressure[i] = inspiredN2Start + n2Rate * (time - 1/n2k) - 
-                          (inspiredN2Start - n2Pressure[i] - n2Rate/n2k) * Math.exp(-n2k * time);
-            
-            double heRate = (inspiredHeEnd - inspiredHeStart) / time;
-            hePressure[i] = inspiredHeStart + heRate * (time - 1/hek) - 
-                          (inspiredHeStart - hePressure[i] - heRate/hek) * Math.exp(-hek * time);
+            // EXACT DecoPlanner Schreiner equation (line 372, 386)
+            n2Pressure[i] = Pi0_N2 + R_N2 * (time - 1/kN2) - 
+                           (Pi0_N2 - n2Pressure[i] - (R_N2/kN2)) * Math.exp(-kN2 * time);
+            hePressure[i] = Pi0_He + R_He * (time - 1/kHe) - 
+                           (Pi0_He - hePressure[i] - (R_He/kHe)) * Math.exp(-kHe * time);
         }
     }
     
