@@ -264,7 +264,7 @@ public final class VPMDeco
         
         /* Commented out to prevent hangs
         // Calculate ceiling for each compartment (show all 16)
-        System.out.println("Ceiling calculation for each compartment:");
+        logVPMDebug("Ceiling calculation for each compartment:");
         for (int i = 0; i < 16; i++) {
             double gasLoading = heliumCompartmentPressure[i] + nitrogenCompartmentPressure[i];
             double weightedGradient = 0;
@@ -305,7 +305,7 @@ public final class VPMDeco
                 controllingComp = i;
             }
         }
-        System.out.println("Controlling Compartment: " + (controllingComp + 1));
+        logVPMDebug("Controlling Compartment: " + (controllingComp + 1));
         */
     }
 
@@ -405,17 +405,17 @@ k = time constant (in this case, half-time constant)
 
 
     private static void debugGasSwitch(String when, int gasId, double depth) {
-        System.out.println("\n=== GAS SWITCH: " + when + " ===");
-        System.out.println("Gas ID: " + gasId);
-        System.out.println("Depth: " + depth + "m");
+        logVPMDebug("\n=== GAS SWITCH: " + when + " ===");
+        logVPMDebug("Gas ID: " + gasId);
+        logVPMDebug("Depth: " + depth + "m");
         if (currentDive != null && currentDive.gases != null && gasId < currentDive.gases.size()) {
-            System.out.println("Gas O2%: " + (currentDive.gases.get(gasId).oxygenFraction * 100));
-            System.out.println("Gas He%: " + (currentDive.gases.get(gasId).heliumFraction * 100));
+            logVPMDebug("Gas O2%: " + (currentDive.gases.get(gasId).oxygenFraction * 100));
+            logVPMDebug("Gas He%: " + (currentDive.gases.get(gasId).heliumFraction * 100));
         }
     }
 
     private static void debugFinalGradients() {
-        System.out.println("\n=== FINAL DECO GRADIENTS ===");
+        logVPMDebug("\n=== FINAL DECO GRADIENTS ===");
         for (int i = 0; i < 16; i++) {
             System.out.printf("Comp %d: N2=%.4f He=%.4f\n",
                 i+1, Deco_Gradient_N2[i], Deco_Gradient_He[i]);
@@ -448,9 +448,14 @@ k = time constant (in this case, half-time constant)
             // Ignore file write errors
         }
         
-        // Initialize debug logging (only if not already open)
-        if (debugEnabled && debugLog == null) {
+        // Initialize debug logging (create new file for each calculation)
+        if (debugEnabled) {
             try {
+                // Close existing debug log if open
+                if (debugLog != null) {
+                    debugLog.close();
+                }
+                
                 String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 String logFileName = "decoplanner_debug_" + timestamp + ".txt";
                 debugLog = new PrintWriter(new FileWriter(logFileName));
@@ -840,7 +845,7 @@ k = time constant (in this case, half-time constant)
                 }
             }
             fileOut.close();
-            System.out.println("VPM schedule written to: " + fileName);
+            logVPMDebug("VPM schedule written to: " + fileName);
             
             // Write CONFIRMATION file
             String confirmFile = "LAST_VPM_CAPTURED.txt";
@@ -1128,7 +1133,7 @@ k = time constant (in this case, half-time constant)
             {
                 //PRINT *,'ERROR! ROOT SEARCH EXCEEDED MAXIMUM ITERATIONS'
                 //PAUSE
-                System.out.println("ERROR! ROOT SEARCH EXCEEDED MAXIMUM ITERATIONS");
+                logVPMDebug("ERROR! ROOT SEARCH EXCEEDED MAXIMUM ITERATIONS");
             }
             //===============================================================================
             //     When a solution with the desired accuracy is found, the program jumps out
@@ -1162,8 +1167,8 @@ k = time constant (in this case, half-time constant)
     {
         // Only print this if we're actually decompressing to surface
         if (ending_depth == 0) {
-            System.out.println("\n=== DECOMPRESS TO SURFACE CALLED FROM " + ascent_starting_depth + "m ===");
-            System.out.println("Current runtime: " + currentDive.currentRunTime);
+            logVPMDebug("\n=== DECOMPRESS TO SURFACE CALLED FROM " + ascent_starting_depth + "m ===");
+            logVPMDebug("Current runtime: " + currentDive.currentRunTime);
         }
 
 //  C===============================================================================
@@ -1257,10 +1262,10 @@ k = time constant (in this case, half-time constant)
         //CALC_START_OF_DECO_ZONE(Starting_Depth, Rate, Depth_Start_of_Deco_Zone);
         double Depth_Start_of_Deco_Zone = CALC_START_OF_DECO_ZONE(ascent_starting_depth);
         
-        System.out.println("\n=== DECO ZONE CALCULATION ===");
-        System.out.println("Ascent starting from depth: " + ascent_starting_depth + "m");
-        System.out.println("Current runtime at bottom: " + currentDive.currentRunTime + " min");
-        System.out.println("Depth where deco zone starts: " + Depth_Start_of_Deco_Zone + "m");
+        logVPMDebug("\n=== DECO ZONE CALCULATION ===");
+        logVPMDebug("Ascent starting from depth: " + ascent_starting_depth + "m");
+        logVPMDebug("Current runtime at bottom: " + currentDive.currentRunTime + " min");
+        logVPMDebug("Depth where deco zone starts: " + Depth_Start_of_Deco_Zone + "m");
         
         if(currentDive.offgassingStartsAtDepth == 0.0)
         {
@@ -1306,10 +1311,10 @@ k = time constant (in this case, half-time constant)
         currentDive.currentRunTime += durationOfAscent;
         double Run_Time_Start_of_Deco_Zone = currentDive.currentRunTime;
         
-        System.out.println("\n=== ASCENT TO DECO ZONE ===");
-        System.out.println("Duration of ascent from " + ascent_starting_depth + "m to " + Depth_Start_of_Deco_Zone + "m: " + durationOfAscent + " min");
-        System.out.println("Runtime at start of deco zone: " + Run_Time_Start_of_Deco_Zone + " min");
-        System.out.println("This is where phase volume time calculation starts from!");
+        logVPMDebug("\n=== ASCENT TO DECO ZONE ===");
+        logVPMDebug("Duration of ascent from " + ascent_starting_depth + "m to " + Depth_Start_of_Deco_Zone + "m: " + durationOfAscent + " min");
+        logVPMDebug("Runtime at start of deco zone: " + Run_Time_Start_of_Deco_Zone + " min");
+        logVPMDebug("This is where phase volume time calculation starts from!");
         
         if(runtimeStartOfInitialDecoZone == 0.0) runtimeStartOfInitialDecoZone = Run_Time_Start_of_Deco_Zone;
         double Deco_Phase_Volume_Time = 0.0;
@@ -1356,7 +1361,7 @@ k = time constant (in this case, half-time constant)
         while(true)                                    //there is an exit statement
         {
             cvaIteration++;
-            // System.out.println("=== CVA ITERATION " + cvaIteration + " START ===");
+            // logVPMDebug("=== CVA ITERATION " + cvaIteration + " START ===");
             //  C===============================================================================
             //  C     CALCULATE INITIAL ASCENT CEILING BASED ON ALLOWABLE SUPERSATURATION
             //  C     GRADIENTS AND SET FIRST DECO STOP.  CHECK TO MAKE SURE THAT SELECTED STEP
@@ -1383,8 +1388,8 @@ k = time constant (in this case, half-time constant)
                 //WRITE (*,905)
                 //WRITE (*,900)
                 //STOP 'PROGRAM TERMINATED'
-                System.out.println("ERROR! STEP SIZE IS TOO LARGE TO DECOMPRESS. Deco_Stop_Depth = " + Deco_Stop_Depth + " and Depth_Start_of_Deco_Zone = " + Depth_Start_of_Deco_Zone);
-                System.out.println("PROGRAM TERMINATED");
+                logVPMDebug("ERROR! STEP SIZE IS TOO LARGE TO DECOMPRESS. Deco_Stop_Depth = " + Deco_Stop_Depth + " and Depth_Start_of_Deco_Zone = " + Depth_Start_of_Deco_Zone);
+                logVPMDebug("PROGRAM TERMINATED");
                 System.exit(1);
             }
             //  C===============================================================================
@@ -1403,7 +1408,7 @@ k = time constant (in this case, half-time constant)
             
             // Debug: Show PROJECTED_ASCENT adjustment (only on first iteration)
             if (currentDive.diveSegments.size() == Segment_Number_Start_of_Ascent) {
-                System.out.println("PROJECTED_ASCENT: Initial ceiling=" + originalDecoStop + 
+                logVPMDebug("PROJECTED_ASCENT: Initial ceiling=" + originalDecoStop + 
                                    " -> Adjusted to " + Deco_Stop_Depth);
             }
 
@@ -1412,8 +1417,8 @@ k = time constant (in this case, half-time constant)
                 //WRITE (*,905)
                 //WRITE (*,900)
                 //STOP 'PROGRAM TERMINATED'
-                System.out.println("ERROR! STEP SIZE IS TOO LARGE TO DECOMPRESS, after Projected_Ascent");
-                System.out.println("PROGRAM TERMINATED");
+                logVPMDebug("ERROR! STEP SIZE IS TOO LARGE TO DECOMPRESS, after Projected_Ascent");
+                logVPMDebug("PROGRAM TERMINATED");
                 System.exit(1);
             }
             //  C===============================================================================
@@ -1473,8 +1478,8 @@ k = time constant (in this case, half-time constant)
                 if(Deco_Stop_Depth <= ending_depth)
                 {
                     if(ending_depth != 0) {
-                        System.out.println("BOYLES_LAW_COMPENSATION called for depth: " + ending_depth);
-                        System.out.println("First_Stop_Depth: " + First_Stop_Depth);
+                        logVPMDebug("BOYLES_LAW_COMPENSATION called for depth: " + ending_depth);
+                        logVPMDebug("First_Stop_Depth: " + First_Stop_Depth);
                         BOYLES_LAW_COMPENSATION(First_Stop_Depth, ending_depth, Settings.decoStopInterval); //2019-04-19
                     }
                     
@@ -1527,9 +1532,9 @@ k = time constant (in this case, half-time constant)
                 }
                 
                 // Debug: Before Boyles Law compensation
-                System.out.println("BOYLES_LAW_COMPENSATION called for depth: " + Deco_Stop_Depth);
-                System.out.println("First_Stop_Depth: " + First_Stop_Depth);
-                // System.out.println("Gradients before Boyles Law:");
+                logVPMDebug("BOYLES_LAW_COMPENSATION called for depth: " + Deco_Stop_Depth);
+                logVPMDebug("First_Stop_Depth: " + First_Stop_Depth);
+                // logVPMDebug("Gradients before Boyles Law:");
                 for (int i = 0; i < 4; i++) {
                     System.out.printf("  Comp %d: N2=%.4f He=%.4f\n", i+1, 
                         Allowable_Gradient_N2[i], Allowable_Gradient_He[i]);
@@ -1569,16 +1574,16 @@ k = time constant (in this case, half-time constant)
             Deco_Phase_Volume_Time = currentDive.currentRunTime - runtimeStartOfInitialDecoZone; // Run_Time_Start_of_Deco_Zone;
             
             // Debug: Phase volume time calculation
-            System.out.println("\n=== PHASE VOLUME TIME CALCULATION ===");
-            System.out.println("Run_Time: " + currentDive.currentRunTime);
-            System.out.println("Run_Time_Start_of_Deco_Zone: " + runtimeStartOfInitialDecoZone);
-            // System.out.println("Deco_Phase_Volume_Time: " + Deco_Phase_Volume_Time);
+            logVPMDebug("\n=== PHASE VOLUME TIME CALCULATION ===");
+            logVPMDebug("Run_Time: " + currentDive.currentRunTime);
+            logVPMDebug("Run_Time_Start_of_Deco_Zone: " + runtimeStartOfInitialDecoZone);
+            // logVPMDebug("Deco_Phase_Volume_Time: " + Deco_Phase_Volume_Time);
 
             CALC_SURFACE_PHASE_VOLUME_TIME();                            //subroutine
             
             // Debug: Surface phase volume times
             for (int i = 0; i < 4; i++) {
-                // System.out.println("Comp " + (i+1) + " Surface_Phase_Volume_Time: " + Surface_Phase_Volume_Time[i]);
+                // logVPMDebug("Comp " + (i+1) + " Surface_Phase_Volume_Time: " + Surface_Phase_Volume_Time[i]);
             }
 
             Schedule_Converged = true; // Assume converged unless we find otherwise
@@ -1749,14 +1754,14 @@ k = time constant (in this case, half-time constant)
                     }
 */
                     // Debug: Before Boyles Law compensation (final schedule)
-                    System.out.println("BOYLES_LAW_COMPENSATION called for depth: " + Deco_Stop_Depth + " (final schedule)");
-                    System.out.println("First_Stop_Depth: " + First_Stop_Depth);
+                    logVPMDebug("BOYLES_LAW_COMPENSATION called for depth: " + Deco_Stop_Depth + " (final schedule)");
+                    logVPMDebug("First_Stop_Depth: " + First_Stop_Depth);
                     
                     BOYLES_LAW_COMPENSATION(First_Stop_Depth, Deco_Stop_Depth, decoStopInterval);       //subroutine
                     
                     // Debug: After Boyles Law compensation (second call)
-                    System.out.println("\n=== AFTER BOYLES LAW (2nd call) ===");
-                    System.out.println("Stop Depth: " + Deco_Stop_Depth + "m");
+                    logVPMDebug("\n=== AFTER BOYLES LAW (2nd call) ===");
+                    logVPMDebug("Stop Depth: " + Deco_Stop_Depth + "m");
                     for (int i = 0; i < 4; i++) {
                         System.out.printf("Comp %d Deco Gradients: N2=%.4f He=%.4f\n",
                             i+1, Deco_Gradient_N2[i], Deco_Gradient_He[i]);
@@ -1804,7 +1809,7 @@ k = time constant (in this case, half-time constant)
                     currentDive.resultingDecoPlan.add(decoSegment);
                     
                     // Debug: Show each stop as it's added to the final schedule - KEEP THIS ONE
-                    System.out.println("ADDING STOP TO FINAL SCHEDULE: " + Deco_Stop_Depth + "m for " + 
+                    logVPMDebug("ADDING STOP TO FINAL SCHEDULE: " + Deco_Stop_Depth + "m for " + 
                         String.format("%.2f", stopDuration) + " min");
                     
                     // Only write to file if this is the final converged schedule
@@ -1900,15 +1905,15 @@ k = time constant (in this case, half-time constant)
                     
                     // Check if we're done with all stops
                     if(Deco_Stop_Depth <= 0.0) {
-                        System.out.println("DEBUG: All stops complete, breaking from loop");
+                        logVPMDebug("DEBUG: All stops complete, breaking from loop");
                         break;
                     }
                     //80                                        //end of deco stop loop block
                 }                                           //for final deco schedule
 
-                System.out.println("=== CVA ITERATION " + cvaIteration + " END (CONVERGED) ===");
-                System.out.println("DEBUG: Breaking from CVA loop");
-                System.out.println("DEBUG: About to break from while(true) loop at line " + Thread.currentThread().getStackTrace()[1].getLineNumber());
+                logVPMDebug("=== CVA ITERATION " + cvaIteration + " END (CONVERGED) ===");
+                logVPMDebug("DEBUG: Breaking from CVA loop");
+                logVPMDebug("DEBUG: About to break from while(true) loop at line " + Thread.currentThread().getStackTrace()[1].getLineNumber());
                 break;                            //exit critical volume loop at Line 100
             }                                       //final deco schedule written
             else
@@ -1921,7 +1926,7 @@ k = time constant (in this case, half-time constant)
                 CRITICAL_VOLUME(Deco_Phase_Volume_Time);              //subroutine
                 
                 // Debug: Show allowable gradients after CVA iteration
-                // System.out.println("=== ALLOWABLE GRADIENTS AFTER CVA ITERATION " + cvaIteration + " ===");
+                // logVPMDebug("=== ALLOWABLE GRADIENTS AFTER CVA ITERATION " + cvaIteration + " ===");
                 for (int i = 0; i < 4; i++) {
                     System.out.printf("Comp %d: N2=%.4f He=%.4f\n",
                         i+1, Allowable_Gradient_N2[i], Allowable_Gradient_He[i]);
@@ -1930,7 +1935,7 @@ k = time constant (in this case, half-time constant)
                 Deco_Phase_Volume_Time = 0.0;
                 
                 // Debug: Resetting runtime for next CVA iteration
-                System.out.println("Resetting runtime from " + currentDive.currentRunTime + " to " + Run_Time_Start_of_Deco_Zone);
+                logVPMDebug("Resetting runtime from " + currentDive.currentRunTime + " to " + Run_Time_Start_of_Deco_Zone);
                 
                 currentDive.currentRunTime = Run_Time_Start_of_Deco_Zone;
                 Starting_Depth = Depth_Start_of_Deco_Zone;
@@ -1945,7 +1950,7 @@ k = time constant (in this case, half-time constant)
                     nitrogenCompartmentPressure[i] = N2_Pressure_Start_of_Deco_Zone[i];
                 }
 
-                // System.out.println("=== CVA ITERATION " + cvaIteration + " END ===");
+                // logVPMDebug("=== CVA ITERATION " + cvaIteration + " END ===");
                 
                 //CYCLE                         //Return to start of critical volume loop
                 continue;                     //(Line 50) to process another iteration
@@ -1956,17 +1961,17 @@ k = time constant (in this case, half-time constant)
                 //100   CONTINUE                                      //end of critical volume loop
         }
         
-        System.out.println("DEBUG: Exited CVA while loop successfully!");
-        System.out.println("DEBUG: ending_depth = " + ending_depth);
+        logVPMDebug("DEBUG: Exited CVA while loop successfully!");
+        logVPMDebug("DEBUG: ending_depth = " + ending_depth);
         
         if(ending_depth == 0)
         {
             // Debug: Final TTS calculation
-            System.out.println("\n=== FINAL TTS CALCULATION ===");
-            System.out.println("Bottom Time: " + 25);
-            System.out.println("Total Runtime: " + currentDive.currentRunTime);
-            System.out.println("Deco Time: " + (currentDive.currentRunTime - 25));
-            System.out.println("Final TTS: " + (currentDive.currentRunTime - 25) + " minutes");
+            logVPMDebug("\n=== FINAL TTS CALCULATION ===");
+            logVPMDebug("Bottom Time: " + 25);
+            logVPMDebug("Total Runtime: " + currentDive.currentRunTime);
+            logVPMDebug("Deco Time: " + (currentDive.currentRunTime - 25));
+            logVPMDebug("Final TTS: " + (currentDive.currentRunTime - 25) + " minutes");
             
             // Debug: Show final gradients
             debugFinalGradients();
@@ -1990,16 +1995,16 @@ k = time constant (in this case, half-time constant)
             */
             
             // Debug: Final schedule breakdown (after all segments are added)
-            System.out.println("\n=== COMPLETE FINAL DECOMPRESSION SCHEDULE ===");
-            System.out.println("Total segments in schedule: " + currentDive.resultingDecoPlan.size());
+            logVPMDebug("\n=== COMPLETE FINAL DECOMPRESSION SCHEDULE ===");
+            logVPMDebug("Total segments in schedule: " + currentDive.resultingDecoPlan.size());
             
             double totalDecoTime = 0;
             int actualStopCount = 0;
             
             if (currentDive.resultingDecoPlan.size() > 0) {
-                System.out.println("\nDetailed Stop Schedule:");
-                System.out.println("Stop # | Depth(m) | Duration(min) | Start Time | End Time | Type");
-                System.out.println("-------|----------|---------------|------------|----------|--------");
+                logVPMDebug("\nDetailed Stop Schedule:");
+                logVPMDebug("Stop # | Depth(m) | Duration(min) | Start Time | End Time | Type");
+                logVPMDebug("-------|----------|---------------|------------|----------|--------");
                 for (int i = 0; i < currentDive.resultingDecoPlan.size(); i++) {
                     try {
                         DecoTableSegment segment = currentDive.resultingDecoPlan.get(i);
@@ -2020,25 +2025,25 @@ k = time constant (in this case, half-time constant)
                                 depth, duration, startTime, endTime);
                         }
                     } catch (Exception e) {
-                        System.out.println("Error accessing segment " + i + ": " + e.getMessage());
+                        logVPMDebug("Error accessing segment " + i + ": " + e.getMessage());
                         e.printStackTrace();
                         // Skip this segment and continue
                         continue;
                     }
                 }
                 
-                System.out.println("\n=== SCHEDULE SUMMARY ===");
-                System.out.println("Total actual deco stops: " + actualStopCount);
-                System.out.println("Total deco time (excluding ascents): " + String.format("%.2f", totalDecoTime) + " min");
-                System.out.println("Total runtime: " + String.format("%.2f", currentDive.currentRunTime) + " min");
+                logVPMDebug("\n=== SCHEDULE SUMMARY ===");
+                logVPMDebug("Total actual deco stops: " + actualStopCount);
+                logVPMDebug("Total deco time (excluding ascents): " + String.format("%.2f", totalDecoTime) + " min");
+                logVPMDebug("Total runtime: " + String.format("%.2f", currentDive.currentRunTime) + " min");
                 
                 // List which depths have stops
-                System.out.println("\nStops at depths: ");
+                logVPMDebug("\nStops at depths: ");
                 for (int i = 0; i < currentDive.resultingDecoPlan.size(); i++) {
                     DecoTableSegment segment = currentDive.resultingDecoPlan.get(i);
                     double durVal = Double.parseDouble(segment.getDuration());
                     if (durVal > 0.5) {
-                        System.out.println("  - " + segment.getDepth() + "m: " + segment.getDuration() + " min");
+                        logVPMDebug("  - " + segment.getDepth() + "m: " + segment.getDuration() + " min");
                     }
                 }
                 
@@ -2058,12 +2063,12 @@ k = time constant (in this case, half-time constant)
                         }
                     }
                     fw.close();
-                    System.out.println("\nSchedule written to: decoplanner_schedule_output.txt");
+                    logVPMDebug("\nSchedule written to: decoplanner_schedule_output.txt");
                 } catch (Exception e) {
-                    System.out.println("Could not write schedule to file: " + e.getMessage());
+                    logVPMDebug("Could not write schedule to file: " + e.getMessage());
                 }
             } else {
-                System.out.println("No segments in resultingDecoPlan!");
+                logVPMDebug("No segments in resultingDecoPlan!");
             }
         }
 //  C===============================================================================
@@ -2142,8 +2147,8 @@ k = time constant (in this case, half-time constant)
                 //WRITE (*,908)
                 //WRITE (*,900)
                 //STOP 'PROGRAM TERMINATED'
-                System.out.println("ERROR IN INPUT FILE (REPETITIVE DIVE CODE)");
-                System.out.println("PROGRAM TERMINATED");
+                logVPMDebug("ERROR IN INPUT FILE (REPETITIVE DIVE CODE)");
+                logVPMDebug("PROGRAM TERMINATED");
         }
         //330  CONTINUE                                           //End of repetitive loop
         */
@@ -2330,20 +2335,20 @@ k = time constant (in this case, half-time constant)
         }
 
 /*        
-System.out.println("VPM OC. Depth = " + Depth + " Segment time = " + Segment_Time);
-System.out.println("Inspired_Helium_Pressure = " + Inspired_Helium_Pressure + " Inspired_Nitrogen_Pressure = " + Inspired_Nitrogen_Pressure);
+logVPMDebug("VPM OC. Depth = " + Depth + " Segment time = " + Segment_Time);
+logVPMDebug("Inspired_Helium_Pressure = " + Inspired_Helium_Pressure + " Inspired_Nitrogen_Pressure = " + Inspired_Nitrogen_Pressure);
 System.out.print("Helium: ");
 for(int i=0; i<16; i++)
 {
     System.out.print(heliumCompartmentPressure[i] + ", ");
 }
-System.out.println();
+logVPMDebug();
 System.out.print("Nitrogen: ");
 for(int i=0; i<16; i++)
 {
     System.out.print(nitrogenCompartmentPressure[i] + ", ");
 }
-System.out.println();        
+logVPMDebug();        
 */        
     }
 
@@ -2686,11 +2691,11 @@ System.out.println();
         //100 FORMAT (I3,3X,F5.1,1X,F6.1,1X,'|',3X,I2,3X,'|',F5.2,1X,F7.1,1X,F6.0,2X,F4.2,1X,2P,F7.1,'%',0P,F7.1,2X,F6.0,2X,F6.0)
 /*        if(MAXPO2 > 1.6061)
         {
-            //System.out.println("PO2 exceeds 1.6 in segment " + Segment_Number);
+            //logVPMDebug("PO2 exceeds 1.6 in segment " + Segment_Number);
         }
         if(MAXPO2 > 1.82)
         {
-            //System.out.println("PO2 exceeds 1.82 in segment " + Segment_Number);
+            //logVPMDebug("PO2 exceeds 1.82 in segment " + Segment_Number);
         } */
     }
 
@@ -2982,9 +2987,9 @@ System.out.println();
 
                 if((Inspired_Helium_Pressure + Inspired_Nitrogen_Pressure + Constant_Pressure_Other_Gases - Weighted_Allowable_Gradient) > (Next_Stop + Settings.getSurfacePressure()))
                 {
-                    System.out.println("ERROR! OFF-GASSING GRADIENT IS TOO SMALL TO DECOMPRESS AT THE "+Deco_Stop_Depth+" STOP");
-                    System.out.println("REDUCE STEP SIZE OR INCREASE OXYGEN FRACTION");
-                    System.out.println("PROGRAM TERMINATED");
+                    logVPMDebug("ERROR! OFF-GASSING GRADIENT IS TOO SMALL TO DECOMPRESS AT THE "+Deco_Stop_Depth+" STOP");
+                    logVPMDebug("REDUCE STEP SIZE OR INCREASE OXYGEN FRACTION");
+                    logVPMDebug("PROGRAM TERMINATED");
                     System.exit(1);
                 }
             }
@@ -3024,15 +3029,15 @@ System.out.println();
             /*
             if (Math.abs(Deco_Stop_Depth - 6.0) < 0.1 || Math.abs(Deco_Stop_Depth - 3.0) < 0.1) {
                 debugCeilingCalculation("AFTER_CEILING_CHECK", Deco_Ceiling_Depth, Deco_Stop_Depth, currentDive.currentRunTime);
-                System.out.println("\n=== ASCENT CHECK ===");
-                System.out.println("Deco_Ceiling_Depth: " + Deco_Ceiling_Depth + " m");
-                System.out.println("Next_Stop: " + Next_Stop + " m");
-                System.out.println("Can ascend to " + Next_Stop + "m? " + (Deco_Ceiling_Depth <= Next_Stop));
+                logVPMDebug("\n=== ASCENT CHECK ===");
+                logVPMDebug("Deco_Ceiling_Depth: " + Deco_Ceiling_Depth + " m");
+                logVPMDebug("Next_Stop: " + Next_Stop + " m");
+                logVPMDebug("Can ascend to " + Next_Stop + "m? " + (Deco_Ceiling_Depth <= Next_Stop));
                 if (Deco_Ceiling_Depth <= Next_Stop) {
                     if (Math.abs(Deco_Stop_Depth - 6.0) < 0.1) {
-                        System.out.println("*** SAFE TO ASCEND TO 3M! Stop time: " + Temp_Segment_Time + " min ***");
+                        logVPMDebug("*** SAFE TO ASCEND TO 3M! Stop time: " + Temp_Segment_Time + " min ***");
                     } else {
-                        System.out.println("*** SAFE TO SURFACE! Stop time: " + Temp_Segment_Time + " min ***");
+                        logVPMDebug("*** SAFE TO SURFACE! Stop time: " + Temp_Segment_Time + " min ***");
                     }
                 }
             }
@@ -3238,18 +3243,18 @@ System.out.println();
         }
         
         // Debug: Nuclear Regeneration values
-        System.out.println("\n=== NUCLEAR REGENERATION DEBUG ===");
-        System.out.println("Dive Time: " + Dive_Time);
+        logVPMDebug("\n=== NUCLEAR REGENERATION DEBUG ===");
+        logVPMDebug("Dive Time: " + Dive_Time);
         for (int i = 0; i < 4; i++) {
-            System.out.println("Comp " + (i+1) + ":");
-            System.out.println("  Max_Crushing_Pressure_N2: " + Max_Crushing_Pressure_N2[i]);
-            System.out.println("  Max_Crushing_Pressure_He: " + Max_Crushing_Pressure_He[i]);
-            System.out.println("  Adjusted_Critical_Radius_N2: " + (Adjusted_Critical_Radius_N2[i] * 1e6) + " microns");
-            System.out.println("  Adjusted_Critical_Radius_He: " + (Adjusted_Critical_Radius_He[i] * 1e6) + " microns");
-            System.out.println("  Regenerated_Radius_N2: " + (Regenerated_Radius_N2[i] * 1e6) + " microns");
-            System.out.println("  Regenerated_Radius_He: " + (Regenerated_Radius_He[i] * 1e6) + " microns");
-            System.out.println("  Adjusted_Crushing_Pressure_N2: " + Adjusted_Crushing_Pressure_N2[i]);
-            System.out.println("  Adjusted_Crushing_Pressure_He: " + Adjusted_Crushing_Pressure_He[i]);
+            logVPMDebug("Comp " + (i+1) + ":");
+            logVPMDebug("  Max_Crushing_Pressure_N2: " + Max_Crushing_Pressure_N2[i]);
+            logVPMDebug("  Max_Crushing_Pressure_He: " + Max_Crushing_Pressure_He[i]);
+            logVPMDebug("  Adjusted_Critical_Radius_N2: " + (Adjusted_Critical_Radius_N2[i] * 1e6) + " microns");
+            logVPMDebug("  Adjusted_Critical_Radius_He: " + (Adjusted_Critical_Radius_He[i] * 1e6) + " microns");
+            logVPMDebug("  Regenerated_Radius_N2: " + (Regenerated_Radius_N2[i] * 1e6) + " microns");
+            logVPMDebug("  Regenerated_Radius_He: " + (Regenerated_Radius_He[i] * 1e6) + " microns");
+            logVPMDebug("  Adjusted_Crushing_Pressure_N2: " + Adjusted_Crushing_Pressure_N2[i]);
+            logVPMDebug("  Adjusted_Crushing_Pressure_He: " + Adjusted_Crushing_Pressure_He[i]);
         }
         
         //  C===============================================================================
@@ -3372,9 +3377,9 @@ COMMON /Block_23/ Initial_Helium_Pressure, Initial_Nitrogen_Pressure
         double segmentTime = (Ending_Depth - Starting_Depth) / Rate;
         
         // Time-based crushing pressure tracking for compartment 1
-        System.out.println("\n=== TIME-BASED CRUSHING PRESSURE TRACKING ===");
-        System.out.println("Descent from " + Starting_Depth + "m to " + Ending_Depth + "m at rate " + Rate + " m/min");
-        System.out.println("Total segment time: " + segmentTime + " minutes");
+        logVPMDebug("\n=== TIME-BASED CRUSHING PRESSURE TRACKING ===");
+        logVPMDebug("Descent from " + Starting_Depth + "m to " + Ending_Depth + "m at rate " + Rate + " m/min");
+        logVPMDebug("Total segment time: " + segmentTime + " minutes");
         
         // Calculate inspired gas pressures for tracking
         double FN2 = currentDive.getCurrentNitrogenFraction();
@@ -3524,14 +3529,14 @@ COMMON /Block_23/ Initial_Helium_Pressure, Initial_Nitrogen_Pressure
             
             // Debug output for first compartment only during descent
             if (compartmentIndex == 0) {
-                System.out.println("\n=== CRUSHING PRESSURE DEBUG ===");
-                System.out.println("At depth: " + Ending_Depth + "m");
-                System.out.println("Ambient pressure: " + Ending_Ambient_Pressure);
-                System.out.println("Comp 1 N2 pressure: " + nitrogenCompartmentPressure[0]);
-                System.out.println("Comp 1 He pressure: " + heliumCompartmentPressure[0]);
-                System.out.println("Comp 1 total gas tension: " + (nitrogenCompartmentPressure[0] + heliumCompartmentPressure[0]));
-                System.out.println("Crushing pressure: " + (Ending_Ambient_Pressure - (nitrogenCompartmentPressure[0] + heliumCompartmentPressure[0])));
-                System.out.println("Max crushing pressure so far: " + Max_Crushing_Pressure_N2[0]);
+                logVPMDebug("\n=== CRUSHING PRESSURE DEBUG ===");
+                logVPMDebug("At depth: " + Ending_Depth + "m");
+                logVPMDebug("Ambient pressure: " + Ending_Ambient_Pressure);
+                logVPMDebug("Comp 1 N2 pressure: " + nitrogenCompartmentPressure[0]);
+                logVPMDebug("Comp 1 He pressure: " + heliumCompartmentPressure[0]);
+                logVPMDebug("Comp 1 total gas tension: " + (nitrogenCompartmentPressure[0] + heliumCompartmentPressure[0]));
+                logVPMDebug("Crushing pressure: " + (Ending_Ambient_Pressure - (nitrogenCompartmentPressure[0] + heliumCompartmentPressure[0])));
+                logVPMDebug("Max crushing pressure so far: " + Max_Crushing_Pressure_N2[0]);
             }
         }
 //  C===============================================================================
@@ -3615,13 +3620,13 @@ C===============================================================================
         }
         
         // Debug: Initial gradients calculation
-        System.out.println("\n=== INITIAL GRADIENTS CALCULATION ===");
+        logVPMDebug("\n=== INITIAL GRADIENTS CALCULATION ===");
         for (int i = 0; i < 4; i++) {
-            System.out.println("Comp " + (i+1) + ":");
-            System.out.println("  Regenerated_Radius_N2: " + (Regenerated_Radius_N2[i] * 1e6) + " microns");
-            System.out.println("  Regenerated_Radius_He: " + (Regenerated_Radius_He[i] * 1e6) + " microns");
-            // System.out.println("  Initial_Allowable_Gradient_N2: " + Initial_Allowable_Gradient_N2[i]);
-            // System.out.println("  Initial_Allowable_Gradient_He: " + Initial_Allowable_Gradient_He[i]);
+            logVPMDebug("Comp " + (i+1) + ":");
+            logVPMDebug("  Regenerated_Radius_N2: " + (Regenerated_Radius_N2[i] * 1e6) + " microns");
+            logVPMDebug("  Regenerated_Radius_He: " + (Regenerated_Radius_He[i] * 1e6) + " microns");
+            // logVPMDebug("  Initial_Allowable_Gradient_N2: " + Initial_Allowable_Gradient_N2[i]);
+            // logVPMDebug("  Initial_Allowable_Gradient_He: " + Initial_Allowable_Gradient_He[i]);
         }
         
 //  C===============================================================================
@@ -3952,18 +3957,18 @@ C===============================================================================
         }
         
         // Debug: CVA Parameters for first compartment
-        // System.out.println("=== CVA PARAMETERS (Comp 1) ===");
-        // System.out.println("Deco_Phase_Volume_Time: " + Deco_Phase_Volume_Time + " min");
-        // System.out.println("Surface_Phase_Volume_Time[0]: " + Surface_Phase_Volume_Time[0] + " min");
-        // System.out.println("Total Phase_Volume_Time[0]: " + Phase_Volume_Time[0] + " min");
-        System.out.println("Adjusted_Crushing_Pressure_N2[0]: " + Adjusted_Crushing_Pressure_N2[0]);
-        System.out.println("Adjusted_Crushing_Pressure_He[0]: " + Adjusted_Crushing_Pressure_He[0]);
-        // System.out.println("Initial_Allowable_Gradient_N2[0]: " + Initial_Allowable_Gradient_N2[0]);
-        // System.out.println("Initial_Allowable_Gradient_He[0]: " + Initial_Allowable_Gradient_He[0]);
-        System.out.println("Parameter_Lambda: " + Settings.Crit_Volume_Parameter_Lambda + " fsw-min");
-        System.out.println("Parameter_Lambda_Pascals: " + Parameter_Lambda_Pascals + " Pa-min");
-        System.out.println("Surface_Tension_Gamma: " + Settings.Surface_Tension_Gamma);
-        System.out.println("Skin_Compression_GammaC: " + Settings.Skin_Compression_GammaC);
+        // logVPMDebug("=== CVA PARAMETERS (Comp 1) ===");
+        // logVPMDebug("Deco_Phase_Volume_Time: " + Deco_Phase_Volume_Time + " min");
+        // logVPMDebug("Surface_Phase_Volume_Time[0]: " + Surface_Phase_Volume_Time[0] + " min");
+        // logVPMDebug("Total Phase_Volume_Time[0]: " + Phase_Volume_Time[0] + " min");
+        logVPMDebug("Adjusted_Crushing_Pressure_N2[0]: " + Adjusted_Crushing_Pressure_N2[0]);
+        logVPMDebug("Adjusted_Crushing_Pressure_He[0]: " + Adjusted_Crushing_Pressure_He[0]);
+        // logVPMDebug("Initial_Allowable_Gradient_N2[0]: " + Initial_Allowable_Gradient_N2[0]);
+        // logVPMDebug("Initial_Allowable_Gradient_He[0]: " + Initial_Allowable_Gradient_He[0]);
+        logVPMDebug("Parameter_Lambda: " + Settings.Crit_Volume_Parameter_Lambda + " fsw-min");
+        logVPMDebug("Parameter_Lambda_Pascals: " + Parameter_Lambda_Pascals + " Pa-min");
+        logVPMDebug("Surface_Tension_Gamma: " + Settings.Surface_Tension_Gamma);
+        logVPMDebug("Skin_Compression_GammaC: " + Settings.Skin_Compression_GammaC);
 
         for(int i=0; i<16; i++)
         {
@@ -3981,17 +3986,17 @@ C===============================================================================
             
             // Debug: Detailed quadratic formula for compartment 1 He
             if (i == 0) {
-                // System.out.println("\n=== CVA QUADRATIC FORMULA - HELIUM (Comp 1) ===");
-                System.out.println("Adj_Crush_Pressure_He_Pascals: " + Adj_Crush_Pressure_He_Pascals + " Pa");
-                System.out.println("Initial_Allowable_Grad_He_Pa: " + Initial_Allowable_Grad_He_Pa + " Pa");
-                System.out.println("B = " + B + " Pa");
-                System.out.println("C = " + C + " Pa²");
-                System.out.println("B² = " + Math.pow(B,2));
-                System.out.println("4C = " + (4.0*C));
-                System.out.println("B² - 4C = " + (Math.pow(B,2) - 4.0*C));
-                System.out.println("sqrt(B² - 4C) = " + Math.sqrt(Math.pow(B,2) - 4.0*C));
-                System.out.println("New_Allowable_Grad_He_Pascals: " + New_Allowable_Grad_He_Pascals + " Pa");
-                // System.out.println("Final Allowable_Gradient_He[0]: " + Allowable_Gradient_He[i] + " (diving units)");
+                // logVPMDebug("\n=== CVA QUADRATIC FORMULA - HELIUM (Comp 1) ===");
+                logVPMDebug("Adj_Crush_Pressure_He_Pascals: " + Adj_Crush_Pressure_He_Pascals + " Pa");
+                logVPMDebug("Initial_Allowable_Grad_He_Pa: " + Initial_Allowable_Grad_He_Pa + " Pa");
+                logVPMDebug("B = " + B + " Pa");
+                logVPMDebug("C = " + C + " Pa²");
+                logVPMDebug("B² = " + Math.pow(B,2));
+                logVPMDebug("4C = " + (4.0*C));
+                logVPMDebug("B² - 4C = " + (Math.pow(B,2) - 4.0*C));
+                logVPMDebug("sqrt(B² - 4C) = " + Math.sqrt(Math.pow(B,2) - 4.0*C));
+                logVPMDebug("New_Allowable_Grad_He_Pascals: " + New_Allowable_Grad_He_Pascals + " Pa");
+                // logVPMDebug("Final Allowable_Gradient_He[0]: " + Allowable_Gradient_He[i] + " (diving units)");
             }
         }
 
@@ -4011,17 +4016,17 @@ C===============================================================================
             
             // Debug: Detailed quadratic formula for compartment 1 N2
             if (i == 0) {
-                // System.out.println("\n=== CVA QUADRATIC FORMULA - NITROGEN (Comp 1) ===");
-                System.out.println("Adj_Crush_Pressure_N2_Pascals: " + Adj_Crush_Pressure_N2_Pascals + " Pa");
-                System.out.println("Initial_Allowable_Grad_N2_Pa: " + Initial_Allowable_Grad_N2_Pa + " Pa");
-                System.out.println("B = " + B + " Pa");
-                System.out.println("C = " + C + " Pa²");
-                System.out.println("B² = " + Math.pow(B,2));
-                System.out.println("4C = " + (4.0*C));
-                System.out.println("B² - 4C = " + (Math.pow(B,2) - 4.0*C));
-                System.out.println("sqrt(B² - 4C) = " + Math.sqrt(Math.pow(B,2) - 4.0*C));
-                System.out.println("New_Allowable_Grad_N2_Pascals: " + New_Allowable_Grad_N2_Pascals + " Pa");
-                // System.out.println("Final Allowable_Gradient_N2[0]: " + Allowable_Gradient_N2[i] + " (diving units)");
+                // logVPMDebug("\n=== CVA QUADRATIC FORMULA - NITROGEN (Comp 1) ===");
+                logVPMDebug("Adj_Crush_Pressure_N2_Pascals: " + Adj_Crush_Pressure_N2_Pascals + " Pa");
+                logVPMDebug("Initial_Allowable_Grad_N2_Pa: " + Initial_Allowable_Grad_N2_Pa + " Pa");
+                logVPMDebug("B = " + B + " Pa");
+                logVPMDebug("C = " + C + " Pa²");
+                logVPMDebug("B² = " + Math.pow(B,2));
+                logVPMDebug("4C = " + (4.0*C));
+                logVPMDebug("B² - 4C = " + (Math.pow(B,2) - 4.0*C));
+                logVPMDebug("sqrt(B² - 4C) = " + Math.sqrt(Math.pow(B,2) - 4.0*C));
+                logVPMDebug("New_Allowable_Grad_N2_Pascals: " + New_Allowable_Grad_N2_Pascals + " Pa");
+                // logVPMDebug("Final Allowable_Gradient_N2[0]: " + Allowable_Gradient_N2[i] + " (diving units)");
             }
         }
         //===============================================================================
@@ -4704,7 +4709,7 @@ C===============================================================================
         debugLog.println("VPM Conservatism: " + Settings.vpmConservatismSetting);
         debugLog.println("Critical Radius N2: " + Settings.Critical_Radius_N2_Microns + " microns");
         debugLog.println("Critical Radius He: " + Settings.Critical_Radius_He_Microns + " microns");
-        debugLog.println("Last Stop Depth: 3m"); // TODO: Get actual setting
+        debugLog.println("Last Stop 6m: " + Settings.lastStopDoubleInterval);
         debugLog.println("Descent Rate: " + Settings.descentRate + " m/min");
         debugLog.println("Ascent Rate: " + Settings.ascentRate + " m/min");
         debugLog.println();

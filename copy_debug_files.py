@@ -114,25 +114,39 @@ def copy_debug_to_plan_name():
     # Create debug filename, adding 6mlast tag if needed
     base_name = plan_filename.replace('.txt', '')
     if last_stop_6m and '6mlast' not in base_name:
-        # Insert 6mlast before the algorithm part (GF40_85 or VPM2)
-        if 'GF40_85' in base_name:
-            base_name = base_name.replace('GF40_85', '6mlast_GF40_85')
-        elif 'VPM2' in base_name:
-            base_name = base_name.replace('VPM2', '6mlast_VPM2')
+        # Insert 6mlast before the algorithm part (any GF or VPM pattern)
+        # Match GF patterns like GF40_85, GF20_85, etc.
+        gf_match = re.search(r'(GF\d+_\d+)', base_name)
+        if gf_match:
+            gf_pattern = gf_match.group(1)
+            base_name = base_name.replace(gf_pattern, f'6mlast_{gf_pattern}')
         else:
-            # Fallback - add at the end
-            base_name += '_6mlast'
+            # Match VPM patterns like VPM0, VPM1, VPM2, etc.
+            vmp_match = re.search(r'(VPM\d+)', base_name)
+            if vmp_match:
+                vmp_pattern = vmp_match.group(1)
+                base_name = base_name.replace(vmp_pattern, f'6mlast_{vmp_pattern}')
+            else:
+                # Fallback - add at the end
+                base_name += '_6mlast'
     
     # Create updated plan filename to include 6mlast tag if needed
     updated_plan_filename = plan_filename
     if last_stop_6m and '6mlast' not in plan_filename:
         updated_plan_base = plan_filename.replace('.txt', '')
-        if 'GF40_85' in updated_plan_base:
-            updated_plan_base = updated_plan_base.replace('GF40_85', '6mlast_GF40_85')
-        elif 'VPM2' in updated_plan_base:
-            updated_plan_base = updated_plan_base.replace('VPM2', '6mlast_VPM2')
+        # Match GF patterns like GF40_85, GF20_85, etc.
+        gf_match = re.search(r'(GF\d+_\d+)', updated_plan_base)
+        if gf_match:
+            gf_pattern = gf_match.group(1)
+            updated_plan_base = updated_plan_base.replace(gf_pattern, f'6mlast_{gf_pattern}')
         else:
-            updated_plan_base += '_6mlast'
+            # Match VPM patterns like VPM0, VPM1, VPM2, etc.
+            vmp_match = re.search(r'(VPM\d+)', updated_plan_base)
+            if vmp_match:
+                vmp_pattern = vmp_match.group(1)
+                updated_plan_base = updated_plan_base.replace(vmp_pattern, f'6mlast_{vmp_pattern}')
+            else:
+                updated_plan_base += '_6mlast'
         updated_plan_filename = updated_plan_base + '.txt'
     
     debug_filename = base_name + '_details.txt'
@@ -140,9 +154,11 @@ def copy_debug_to_plan_name():
     
     # Determine which test case directory it should go to
     target_test_dir = None
-    if 'GF40_85' in updated_plan_filename:
+    # Check for any Buhlmann GF pattern (GF20_85, GF30_70, GF40_85, GF100_100, etc.)
+    if re.search(r'GF\d+_\d+', updated_plan_filename):
         target_test_dir = "test_cases/Open_Circuit/Buhlmann"
-    elif 'VPM2' in updated_plan_filename:
+    # Check for any VPM pattern (VPM0, VPM1, VPM2, VPM3, VPM4)
+    elif re.search(r'VPM\d+', updated_plan_filename):
         target_test_dir = "test_cases/Open_Circuit/VPM"
     
     if not target_test_dir or not os.path.exists(target_test_dir):
@@ -290,7 +306,7 @@ def main():
         print("1. You've run a dive plan in DecoPlanner recently")
         print("2. Both plan (.txt) and debug files exist")
         print("3. You're running this script from the project root directory")
-        print("4. The plan file contains 'GF40_85' or 'VPM2' for proper directory detection")
+        print("4. The plan file contains GF patterns (GF40_85, etc.) or VPM patterns (VPM0-VPM4)")
 
 if __name__ == "__main__":
     main()

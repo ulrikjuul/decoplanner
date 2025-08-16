@@ -575,9 +575,14 @@ k = time constant (in this case, half-time constant)
 //        body = theBody;
         currentDive = theDive; // body.getCurrentDive();
         
-        // Initialize debug logging (only if not already open)
-        if (debugEnabled && debugLog == null) {
+        // Initialize debug logging (create new file for each calculation)
+        if (debugEnabled) {
             try {
+                // Close existing debug log if open
+                if (debugLog != null) {
+                    debugLog.close();
+                }
+                
                 String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 String logFileName = "decoplanner_debug_" + timestamp + ".txt";
                 debugLog = new PrintWriter(new FileWriter(logFileName));
