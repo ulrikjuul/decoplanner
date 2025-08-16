@@ -62,6 +62,13 @@ public class PerfectAlignmentCLI {
         // Add bottom gas (DIVE_GAS)
         gases.add(new Gas(bottomO2, bottomHe, Gas.DIVE_GAS, (int)depth));
         
+        // Debug gas fractions
+        Gas debugBottomGas = gases.get(0);
+        System.out.printf("Bottom gas: %.1f%% O2, %.1f%% He, %.1f%% N2\n", 
+                         debugBottomGas.oxygenFraction*100, 
+                         debugBottomGas.heliumFraction*100, 
+                         debugBottomGas.nitrogenFraction*100);
+        
         // Parse and add deco gases (format: "50@21,99@6" or just "50@21")
         if (!decoGasesStr.equals("0")) {
             String[] decoGasArray = decoGasesStr.split(",");
@@ -89,10 +96,10 @@ public class PerfectAlignmentCLI {
         System.out.println("Water Vapor Pressure: " + WATER_VAPOR_PRESSURE + " msw");
         System.out.println();
         
-        // Initialize tissues at surface
-        double inspiredN2 = (SURFACE_PRESSURE - WATER_VAPOR_PRESSURE) * 0.79;
+        // Initialize tissues at surface (in ATA)
+        double inspiredN2_ATA = (1.0 - WATER_VAPOR_PRESSURE / SURFACE_PRESSURE) * 0.79;
         for (int i = 0; i < 16; i++) {
-            n2Pressure[i] = inspiredN2;
+            n2Pressure[i] = inspiredN2_ATA;
             hePressure[i] = 0;
         }
         
@@ -119,6 +126,12 @@ public class PerfectAlignmentCLI {
         runtime += bottomTime;
         
         // FIND FIRST DECO STOP
+        System.out.printf("\nTissue pressures after %dm/%dmin:\n", (int)depth, (int)time);
+        for (int i = 0; i < 4; i++) {
+            System.out.printf("Comp %d: N2=%.4f He=%.4f Total=%.4f\n", 
+                            i+1, n2Pressure[i], hePressure[i], n2Pressure[i] + hePressure[i]);
+        }
+        
         double ceiling = calculateCeiling(gfLow);
         double firstStopDepth = findFirstStop(gfLow);
         System.out.printf("\nRaw ceiling depth: %.3fm\n", ceiling);
@@ -359,8 +372,9 @@ public class PerfectAlignmentCLI {
             double b = (n2Pressure[i] * N2_B[i] + hePressure[i] * HE_B[i]) / totalPressure;
             
             // Apply gradient factor
-            double toleratedPressure = (totalPressure - a * gradientFactor) / (gradientFactor / b - gradientFactor + 1);
-            double ceiling = toleratedPressure - SURFACE_PRESSURE;
+            double toleratedPressureATA = (totalPressure - a * gradientFactor) / (gradientFactor / b - gradientFactor + 1);
+            // Convert back to depth in msw
+            double ceiling = (toleratedPressureATA - 1.0) * SURFACE_PRESSURE;
             
             if (ceiling > maxCeiling) {
                 maxCeiling = ceiling;
@@ -371,9 +385,16 @@ public class PerfectAlignmentCLI {
     }
     
     private static void loadTissuesConstant(double depth, double time, double gasO2, double gasHe) {
-        double ambientPressure = SURFACE_PRESSURE + depth;
-        double inspiredN2 = (ambientPressure - WATER_VAPOR_PRESSURE) * (1 - gasO2 - gasHe);
-        double inspiredHe = (ambientPressure - WATER_VAPOR_PRESSURE) * gasHe;
+        // Convert to ATA for tissue calculations (DecoPlanner uses ATA internally)
+        double ambientPressureATA = (SURFACE_PRESSURE + depth) / SURFACE_PRESSURE;
+        double inspiredN2 = (ambientPressureATA - WATER_VAPOR_PRESSURE / SURFACE_PRESSURE) * (1 - gasO2 - gasHe);
+        double inspiredHe = (ambientPressureATA - WATER_VAPOR_PRESSURE / SURFACE_PRESSURE) * gasHe;
+        
+        // Debug pressure calculations
+        if (depth == 100.0) {
+            System.out.printf("DEBUG: AmbientATA=%.3f, InspiredN2=%.3f, InspiredHe=%.3f\n", 
+                             ambientPressureATA, inspiredN2, inspiredHe);
+        }
         
         for (int i = 0; i < 16; i++) {
             // Haldane equation
@@ -392,13 +413,15 @@ public class PerfectAlignmentCLI {
             double n2k = Math.log(2) / N2_HALFTIME[i];
             double hek = Math.log(2) / HE_HALFTIME[i];
             
-            double startPressure = SURFACE_PRESSURE + startDepth;
-            double endPressure = SURFACE_PRESSURE + endDepth;
+            // Convert to ATA for tissue calculations
+            double startPressureATA = (SURFACE_PRESSURE + startDepth) / SURFACE_PRESSURE;
+            double endPressureATA = (SURFACE_PRESSURE + endDepth) / SURFACE_PRESSURE;
+            double waterVaporATA = WATER_VAPOR_PRESSURE / SURFACE_PRESSURE;
             
-            double inspiredN2Start = (startPressure - WATER_VAPOR_PRESSURE) * (1 - gasO2 - gasHe);
-            double inspiredN2End = (endPressure - WATER_VAPOR_PRESSURE) * (1 - gasO2 - gasHe);
-            double inspiredHeStart = (startPressure - WATER_VAPOR_PRESSURE) * gasHe;
-            double inspiredHeEnd = (endPressure - WATER_VAPOR_PRESSURE) * gasHe;
+            double inspiredN2Start = (startPressureATA - waterVaporATA) * (1 - gasO2 - gasHe);
+            double inspiredN2End = (endPressureATA - waterVaporATA) * (1 - gasO2 - gasHe);
+            double inspiredHeStart = (startPressureATA - waterVaporATA) * gasHe;
+            double inspiredHeEnd = (endPressureATA - waterVaporATA) * gasHe;
             
             // Schreiner equation
             double n2Rate = (inspiredN2End - inspiredN2Start) / time;
